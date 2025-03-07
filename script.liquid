@@ -1,0 +1,117 @@
+ <!-- Orbo Code -->
+
+ {% comment %} <script src="{{ 'orbo-skin-analyzer.umd.js' | asset_url }}" defer></script>
+ <link rel="stylesheet" href="{{ 'style.css' | asset_url }}"> {% endcomment %}
+
+ {% comment %} <!--
+   <link
+     rel="stylesheet"
+     href="https://makeup.sdk.orbo.ai/bxU3A3bSJO/1.0.0/skin-analyzer/style.css"
+   >
+   <script
+     src=" https://makeup.sdk.orbo.ai/bxU3A3bSJO/1.0.0/skin-analyzer/orbo-skin-analyzer.umd.js"
+     defer
+   ></script>
+ --> {% endcomment %}
+ <link
+   rel="stylesheet"
+   href="https://makeup.sdk.orbo.ai/bxU3A3bSJO/1.0.0/smart-capture/orbo-conscious-chemist-smart-capture.css"
+ >
+ <script
+   src=" https://makeup.sdk.orbo.ai/bxU3A3bSJO/1.0.0/smart-capture/orbo-conscious-chemist-smart-capture.js"
+   defer
+ ></script>
+ {% # theme-check-enable AssetSizeJavaScript %}
+
+ <div
+   id="react-app-modal"
+   class="hidden-modal"
+   style="position: fixed; bottom: 0; left: 0; width: 100%; height: 100%; z-index: 1000; display: none; padding: 0;"
+ >
+   <div style="position: relative; width: 100%; height: 100%; background: white; border-radius: 8px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); overflow-y: auto; overflow-x: hidden; margin: 0 auto;">
+     <!--
+       <button
+         id="close-react-app"
+         style="position: absolute; top: 10px; right: 15px; background: none; color: black; font-size: 24px; cursor: pointer;"
+       >
+         &times;
+       </button>
+     -->
+
+     <div
+       id="orbo-cc-skin-analyzer-container"
+       style="width: 100%; display: flex; justify-content: center; align-items: center;"
+     ></div>
+   </div>
+ </div>
+
+ <script>
+     document.addEventListener('DOMContentLoaded', function () {
+     const modal = document.getElementById('react-app-modal');
+     const openButton = document.getElementById('open-react-app');
+     const closeButton = document.getElementById('close-react-app');
+
+     if (openButton) {
+       openButton.onclick = function () {
+         console.log("clicked");
+         OrboSkinAnalyzer.startOrboSkinAnalyzer();
+         if (modal) {
+           modal.style.display = 'flex';
+           document.body.style.overflow = 'hidden';
+         }
+       };
+     }
+
+       document.addEventListener("skinAnalysisClose", ()=>{
+         if (modal) {
+           modal.style.display = 'none';
+           document.body.style.overflow = '';
+         }
+       });
+
+     if (closeButton) {
+       closeButton.onclick = function () {
+         if (modal) {
+           modal.style.display = 'none';
+           document.body.style.overflow = '';
+         }
+       };
+     }
+
+       // document.addEventListener("skinAnalysisClose", function(){
+       //       if (modal) {
+       //     modal.style.display = 'none';
+       //     document.body.style.overflow = '';
+       //       }
+       // });
+
+     window.onclick = function (event) {
+       if (event.target === modal) {
+         modal.style.display = 'none';
+         document.body.style.overflow = '';
+       }
+     };
+   });
+
+   function handleOpenWebButtonClick() {
+        console.log("CLicked");
+        OrboSkinAnalyzer.startOrboSkinAnalyzer();
+        const modal = document.getElementById('modal');
+        if (modal) {
+          modal.style.display = 'flex';
+          document.body.style.overflow = 'hidden';
+        }
+      }
+ </script>
+
+ <style>
+   div:empty {
+     display: block;
+   }
+
+   #react-app-modal *:focus-visible {
+     outline: 0;
+     outline-offset: 0;
+     box-shadow: none;
+   }
+ </style>

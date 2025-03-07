@@ -1,0 +1,22 @@
+body {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 18px;
+  line-height: 1.55556;
+  font-weight: 400;
+  color: #494f7c;
+  background-color: #ffffff;
+  -webkit-text-size-adjust: none;
+  -webkit-font-smoothing: subpixel-antialiased;
+}
+
+html:not([data-scroll='0']) header {
+  position: fixed;
+  top: 0;
+  width: 100%;
+  background-color: white !important;
+  /* opacity: 0.9; */
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.12);
+  transition: 0.4s linear;
+  /* padding: 0px !important; */
+  z-index: 3;
+}

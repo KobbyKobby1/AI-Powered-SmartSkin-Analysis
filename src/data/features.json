@@ -1,0 +1,44 @@
+{
+  "en": [
+    {
+      "title": "Skin Analysis Through AI",
+      "description": "The Smartskin platform uses smartphone cameras to analyze skin conditions such as acne, dark spots, hyperpigmentation, among others and leverages AI trained on a diverse dataset of African skin tones to ensure accurate diagnostics."
+    },
+    {
+      "title": "Personalized Skincare Recommendations",
+      "description": "Our main goal is to tailor product recommendations based on skin type, condition, and local climate."
+    },
+    {
+      "title": "Skin Health Monitoring",
+      "description": "Our AI skincare solution tracks progress over time, allowing users to see the effectiveness of recommended products and routines."
+    },
+    {
+      "title": "Product and Professional Integration",
+      "description": "We seek to connect users to African-made skincare brands and to promote local products designed for African skin. We are also focused on partnering with foreign-made skincare brands and local retailers of imported skincare products designed for African skin. Plus, integrating a database of dermatologists, estheticians, and skincare specialists for consultations, virtual or in-person."
+    },
+    {
+      "title": "Educational Content",
+      "description": "Through the Smartskin platform, we want to offer educational resources on skincare tailored to African climates and conditions and to also provide tips on maintaining skin health, addressing common myths, and understanding ingredients."
+    },
+    {
+      "title": "Community Engagement",
+      "description": "We want to use our platform for users to share experiences, reviews, and recommendations and encourage collaboration between users, brands, and skincare professionals."
+    },
+    {
+      "title": "Accessibility in Remote Areas",
+      "description": "Ours is a mobile-friendly platform that allows users in rural or underserved areas to access expert skincare advice without needing to travel to the cities for in-person consultations with skincare professionals."
+    },
+    {
+      "title": "Promotion of Local Brands",
+      "description": "Our focus is to highlight African skincare brands that use natural and locally sourced ingredients like shea butter, baobab oil, and marula oil."
+    },
+    {
+      "title": "Cost-Effectiveness",
+      "description": "We aim to provide affordable skincare solutions, making personalized skincare accessible to a wider audience. We will do this by partnering with brands and professionals to offer discounts and bundled packages."
+    },
+    {
+      "title": "Target Audience",
+      "description": "Our primary target includes young professionals, students, and urban dwellers interested in skincare and self-care. Our secondary market includes rural populations with limited access to dermatologists but increasing smartphone penetration. We also aim to focus on men, as awareness about men’s skincare is growing in Africa."
+    }
+  ]
+}

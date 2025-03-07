@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Library Test</title>
+</head>
+
+<body>
+    <div id="orbo-cc-skin-analyzer-container"></div>
+
+    <!-- Include the UMD build of your library -->
+    <link href="https://makeup.sdk.orbo.ai/bxU3A3bSJO/1.0.0/smart-capture/orbo-conscious-chemist-smart-capture.css"
+        rel="stylesheet">
+    <script
+        src="https://makeup.sdk.orbo.ai/bxU3A3bSJO/1.0.0/smart-capture/orbo-conscious-chemist-smart-capture.js"></script>
+    <link href="dist/style.css" rel="stylesheet">
+    <script src="dist/orbo-skin-analyzer.umd.js"></script>
+
+    <script>
+        OrboSkinAnalyzer.startOrboSkinAnalyzer();
+    </script>
+
+    <style>
+        p:empty {
+            display: none;
+        }
+    </style>
+</body>
+
+</html>
