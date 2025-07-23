@@ -1,10 +1,11 @@
-import { Box, Typography, Link, Divider, Grid2 } from '@mui/material';
+import { Box, Typography, Link, Divider } from '@mui/material';
 import Image from 'next/image';
 import { logo } from '../../assets';
 import { Instagram, Phone } from '@mui/icons-material';
 import FacebookIcon from '@mui/icons-material/Facebook';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 import EmailIcon from '@mui/icons-material/Email';
+import Grid from '@mui/material/Grid';
 
 interface LinkType {
   id: number;
@@ -18,46 +19,34 @@ const links: LinkType[] = [
       { name: 'Home', url: '/' },
       { name: 'About', url: '/about-us' },
       { name: 'Contact', url: '/contact-us' },
+      { name: 'Features', url: '/features' },
     ],
   },
-  {
-    id: 2,
-    link: [{ name: 'Features', url: '/features' }],
-  },
 ];
+
 const year = new Date().getFullYear();
 
 const Footer = () => {
   return (
     <Box sx={{ bgcolor: '#000321', color: 'white', py: 12 }}>
-      <Box
-        sx={{
-          maxWidth: '1200px',
-          mx: 'auto',
-          px: 3,
-        }}
-      >
-        {/* Grid Layout */}
-        <Grid2 container spacing={4} justifyContent="center">
+      <Box sx={{ maxWidth: '1200px', mx: 'auto', px: 3 }}>
+        <Grid container spacing={4} justifyContent="center">
           {/* Column 1: Logo and Social Links */}
-          <Grid2 size={{ xs: 12, md: 4 }}>
+          <Grid item xs={12} md={4}>
             <Image src={logo.src} alt="logo" width={200} height={50} />
             <Box sx={{ display: 'flex', gap: 2, mt: 2 }}>
               <Link href="https://www.facebook.com/smartskinafrica" target="_blank" sx={{ color: 'inherit' }}>
                 <FacebookIcon />
               </Link>
-              {/* <Link href="https://twitter.com" target="_blank" sx={{ color: 'inherit' }}>
-                <X />
-              </Link> */}
               <Link href="https://instagram.com/smartskinafrica" target="_blank" sx={{ color: 'inherit' }}>
                 <Instagram />
               </Link>
             </Box>
-          </Grid2>
+          </Grid>
 
-          {/* Column 2 and 3: Links */}
+          {/* Column 2 and 3: Navigation Links */}
           {links.map((columnLinks) => (
-            <Grid2 key={columnLinks.id} size={{ xs: 6, md: 2 }}>
+            <Grid item key={columnLinks.id} xs={6} md={2}>
               <Box component="ul" sx={{ listStyle: 'none', p: 0 }}>
                 {columnLinks.link.map((link, index) => (
                   <li key={index}>
@@ -76,29 +65,44 @@ const Footer = () => {
                   </li>
                 ))}
               </Box>
-            </Grid2>
+            </Grid>
           ))}
 
-          {/* Column 4: Contact Information */}
-          <Grid2 size={{ xs: 12, md: 4 }}>
+          {/* Column 4: Contact Info with Links */}
+          <Grid item xs={12} md={4}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
               <LocationOnIcon />
-              <Typography variant="body2">
+              <Link
+                href="https://www.google.com/maps/place/Friendly+Heights+Building,+Mahama+Road,+Tse+Addo,+Accra,+Ghana"
+                target="_blank"
+                rel="noopener noreferrer"
+                sx={{ color: 'inherit', fontSize: '14px', textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}
+              >
                 S-03 First Floor, Friendly Heights Building, Mahama Road, Tse Addo, Accra – Ghana
-              </Typography>
+              </Link>
             </Box>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
               <Phone />
-              <Typography variant="body2">+233 55 059 0714</Typography>
+              <Link
+                href="tel:+233550590714"
+                sx={{ color: 'inherit', fontSize: '14px', textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}
+              >
+                +233 55 059 0714
+              </Link>
             </Box>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
               <EmailIcon />
-              <Typography variant="body2">info@smartskinafrica.com</Typography>
+              <Link
+                href="mailto:info@smartskinafrica.com"
+                sx={{ color: 'inherit', fontSize: '14px', textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}
+              >
+                info@smartskinafrica.com
+              </Link>
             </Box>
-          </Grid2>
-        </Grid2>
+          </Grid>
+        </Grid>
 
-        {/* Divider and Footer Bottom */}
+        {/* Divider and Bottom Row */}
         <Divider sx={{ bgcolor: 'gray', my: 4 }} />
         <Box
           sx={{

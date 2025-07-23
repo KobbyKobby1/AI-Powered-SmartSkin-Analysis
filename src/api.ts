@@ -2,12 +2,12 @@ import { OutputScore, Recommendation } from './context';
 
 export class Api {
   //DEV
-  // private clientKey: string = 'ORBO2E38D943A9CBB94D9BD8F4892F3A2GHNASKN';
-  // private baseUrl: string = 'https://dev.api.ghanaskinanalysis.orbo.tech/api';
+  private clientKey: string = 'ORBO2E38D943A9CBB94D9BD8F4892F3A2GHNASKN';
+  private baseUrl: string = 'https://dev.api.ghanaskinanalysis.orbo.tech/api';
 
   //PROD
-  private clientKey: string = 'ORBOC39FGG344A13F1E3835618249532552GC';
-  private baseUrl: string = '/api';
+  //private clientKey: string = 'ORBOC39FGG344A13F1E3835618249532552GC';
+  //private baseUrl: string = '/api';
 
   private sessionApiUrl: string = `${this.baseUrl}/session/web/register`;
   private skinApiUrl: string = `${this.baseUrl}/web/skin`;

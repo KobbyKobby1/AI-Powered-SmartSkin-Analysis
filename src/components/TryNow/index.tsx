@@ -70,7 +70,7 @@ const SkinModal = () => {
               sx={{
                 flexShrink: 0,
                 borderRadius: '50px !important',
-                background: '#602DEE',
+                background: '#00796B',
                 fontSize: { xs: '16px', md: '24px' },
                 color: '#FFF',
                 padding: { xs: '10px 20px', md: '12px 24px' },
