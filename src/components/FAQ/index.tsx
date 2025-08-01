@@ -8,160 +8,151 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { styled } from '@mui/material/styles';
 import { Box, Container } from '@mui/material';
 
-// Styled Accordion with modern elevation, rounded corners, and hover effect
-const StyledAccordion = styled(Accordion)(({ theme }) => ({
-  marginBottom: theme.spacing(2),
-  borderRadius: 16,
-  backgroundColor: '#FAE1BD', // soft warm tone
-  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
-  border: '1px solid #e8d1a0',
-  overflow: 'hidden',
+const StyledAccordion = styled(Accordion)({
+  marginBottom: '20px',
+  borderRadius: '24px !important',
+  backgroundColor: '#ffffff',
+  boxShadow: '0 4px 25px rgba(0, 0, 0, 0.08)',
+  border: '2px solid transparent',
+  background: 'linear-gradient(white, white) padding-box, linear-gradient(135deg, rgba(229, 188, 118, 0.3), rgba(0, 121, 107, 0.2)) border-box',
   transition: 'all 0.3s ease',
+  cursor: 'pointer',
+  overflow: 'hidden',
   '&:hover': {
-    transform: 'scale(1.01)',
-    boxShadow: '0 6px 18px rgba(0, 0, 0, 0.08)',
+    transform: 'translateY(-4px)',
+    boxShadow: '0 12px 40px rgba(0, 0, 0, 0.12)',
+    background: 'linear-gradient(white, white) padding-box, linear-gradient(135deg, rgba(229, 188, 118, 0.6), rgba(0, 121, 107, 0.4)) border-box',
   },
-}));
+  '&:before': { display: 'none' },
+});
 
-// Styled Summary with branding color and strong visual contrast
-const StyledAccordionSummary = styled(AccordionSummary)(({ }) => ({
-  backgroundColor: '#F2C185',
-  padding: '18px 24px',
-  fontWeight: 600,
-  fontSize: '1.05rem',
-  color: '#2F2F2F',
-  '& .MuiAccordionSummary-content': {
-    margin: 0,
-  },
-}));
-
-// AccordionDetails with soft background and comfortable reading experience
-const StyledAccordionDetails = styled(AccordionDetails)(({ }) => ({
-  backgroundColor: '#fff9f1',
+const StyledAccordionSummary = styled(AccordionSummary)({
+  backgroundColor: '#ffffff',
   padding: '20px 24px',
-  fontSize: '0.95rem',
+  fontWeight: 600,
+  fontSize: '1.1rem',
+  color: '#1a1a1a',
+  '& .MuiAccordionSummary-content': { margin: 0 },
+  '& .MuiAccordionSummary-expandIconWrapper': { color: '#00796B' },
+});
+
+const StyledAccordionDetails = styled(AccordionDetails)({
+  backgroundColor: '#ffffff',
+  padding: '0 24px 24px 24px',
+  fontSize: '1rem',
   lineHeight: 1.7,
-  color: '#4B4B4B',
-}));
+  color: '#666',
+});
 
 const Faq = () => {
   const faqs = [
     {
       question: 'What is Smartskin Africa?',
-      answer:
-        'Smartskin Africa is an AI-powered skincare analysis platform redefining modern beauty routine. With a simple selfie and face scan, our cutting-edge technology analyzes key skin parameters including acne, texture, tone, wrinkles, and hydration levels—to deliver personalized skincare recommendations.',
+      answer: 'Smartskin Africa is an AI-powered skincare analysis platform redefining modern beauty routine. With a simple selfie and face scan, our cutting-edge technology analyzes key skin parameters including acne, texture, tone, wrinkles, and hydration levels—to deliver personalized skincare recommendations.',
     },
     {
       question: 'How does Smartskin Africa platform work?',
-      answer:
-        'You simply select your gender, age, and skin type, then take a selfie or upload a photo. Our AI assesses your skin’s health and generates a detailed report with insights and recommendations.',
+      answer: 'You simply select your gender, age, and skin type, then take a selfie or upload a photo. Our AI assesses your skins health and generates a detailed report with insights and recommendations.',
     },
     {
       question: 'Is SmartSkin Africa only for people with skin problems?',
-      answer:
-        'No, it’s for everyone! Whether you want to understand your skin better or maintain healthy skin, Smartskin Africa offers tailored advice.',
+      answer: 'No, itis for everyone! Whether you want to understand your skin better or maintain healthy skin, Smartskin Africa offers tailored advice.',
     },
     {
       question: 'How accurate is the AI skin analysis?',
-      answer:
-        'Our AI is trained on diverse African skin tones to ensure high accuracy. While reliable, it’s not a replacement for medical advice from dermatologists.',
+      answer: 'Our AI is trained on diverse African skin tones to ensure high accuracy. While reliable, it is not a replacement for medical advice from dermatologists.',
     },
     {
       question: 'What skin concerns does the platform analyze?',
-      answer:
-        'It detects acne, dullness, dark spots, wrinkles, sagging, dryness, uneven tone, redness, and more.',
+      answer: 'It detects acne, dullness, dark spots, wrinkles, sagging, dryness, uneven tone, redness, and more.',
     },
     {
-      question: 'Can Smartskin Africa track my skin’s progress over time?',
-      answer:
-        'Yes! You can monitor changes and assess how recommended routines and products are working for you.',
+      question: 'Can Smartskin Africa track my skins progress over time?',
+      answer: 'Yes! You can monitor changes and assess how recommended routines and products are working for you.',
     },
     {
       question: 'How does Smartskin Africa recommend products?',
-      answer:
-        'Our AI factors in your skin type, age, gender, and climate to suggest personalized skincare products.',
+      answer: 'Our AI factors in your skin type, age, gender, and climate to suggest personalized skincare products.',
     },
     {
       question: 'Does the platform recommend only African skincare brands?',
-      answer:
-        'We highlight African brands, but also include foreign products made for African skin.',
-    },
-    {
-      question: 'Can I buy products directly from Smartskin Africa?',
-      answer:
-        'We connect you to trusted retailers and brands where you can buy the recommended products.',
-    },
-    {
-      question: 'Does Smartskin Africa recommend skincare routines as well?',
-      answer:
-        'Yes. Our platform offers full routines curated by skincare experts, tailored to your profile.',
-    },
-    {
-      question: 'Can I consult a dermatologist or skincare specialist through the platform?',
-      answer:
-        'Yes. You can book virtual or in-person consultations with our listed experts.',
-    },
-    {
-      question: 'Is there a community where users can share skincare experiences?',
-      answer:
-        'Absolutely! Our social platform encourages shared tips, reviews, and progress stories.',
-    },
-    {
-      question: 'Is Smartskin Africa accessible to people in rural areas?',
-      answer:
-        'Yes. Our lightweight, mobile-friendly platform ensures access even in remote areas.',
-    },
-    {
-      question: 'Is the service affordable?',
-      answer:
-        'Yes! We offer competitive pricing and free skincare advice via our social media. We also bundle deals and offer discounts through partners.',
-    },
-    {
-      question: 'Will my skin analysis data be shared with third parties?',
-      answer:
-        'Never. Your personal data is secure and will not be shared without your consent.',
-    },
-    {
-      question: 'Who can use Smartskin Africa?',
-      answer:
-        'Everyone — students, professionals, rural and urban users, and people of all genders.',
+      answer: 'We highlight African brands, but also include foreign products made for African skin.',
     },
   ];
 
   return (
-    <Container
-      maxWidth={false}
-      sx={{
-        background: 'linear-gradient(to bottom, #f6f9f9, #fff7ed)',
-        padding: { xs: 3, md: 6 },
-      }}
-    >
+    <Container maxWidth={false} sx={{ background: '#fafbfc', padding: { xs: '60px 0', md: '120px 0' } }}>
       <Container maxWidth="lg">
         <Box sx={{ py: { xs: 4, md: 6 } }}>
-          <Typography
-            variant="h4"
-            gutterBottom
-            fontWeight={700}
-            fontSize={{ xs: 28, md: 36 }}
-            sx={{ color: '#2D2D2D' }}
-          >
-            Frequently Asked Questions
-          </Typography>
-
-          {faqs.map((faq, index) => (
-            <StyledAccordion key={index}>
-              <StyledAccordionSummary
-                expandIcon={<ExpandMoreIcon sx={{ color: '#2F2F2F' }} />}
-                aria-controls={`panel${index + 1}-content`}
-                id={`panel${index + 1}-header`}
+          <Box sx={{ textAlign: 'center', mb: { xs: 6, md: 8 } }}>
+            <Box
+              sx={{
+                width: '60px',
+                height: '2px',
+                background: 'linear-gradient(135deg, #E5BC76 0%, #C6A461 100%)',
+                margin: '0 auto 40px',
+              }}
+            />
+            
+            <Typography
+              variant="h4"
+              component="h2"
+              sx={{
+                fontSize: { xs: '32px', md: '42px' },
+                fontWeight: 700,
+                lineHeight: { xs: '40px', md: '50px' },
+                color: '#1a1a1a',
+                letterSpacing: '-0.02em',
+                mb: 3,
+              }}
+            >
+              Frequently Asked{' '}
+              <Box
+                component="span"
+                sx={{
+                  background: 'linear-gradient(135deg, #E5BC76 0%, #C6A461 100%)',
+                  backgroundClip: 'text',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                }}
               >
-                <Typography>{faq.question}</Typography>
-              </StyledAccordionSummary>
-              <StyledAccordionDetails>
-                <Typography>{faq.answer}</Typography>
-              </StyledAccordionDetails>
-            </StyledAccordion>
-          ))}
+                Questions
+              </Box>
+            </Typography>
+
+            <Typography
+              sx={{
+                fontSize: { xs: '16px', md: '18px' },
+                color: '#666',
+                maxWidth: '600px',
+                margin: '0 auto',
+                lineHeight: { xs: '24px', md: '28px' },
+              }}
+            >
+              Everything you need to know about Smartskin Africa and how our AI-powered platform can transform your skincare routine.
+            </Typography>
+          </Box>
+
+          <Box sx={{ maxWidth: '800px', margin: '0 auto' }}>
+            {faqs.map((faq, index) => (
+              <StyledAccordion key={index}>
+                <StyledAccordionSummary
+                  expandIcon={<ExpandMoreIcon />}
+                  aria-controls={`panel${index + 1}-content`}
+                  id={`panel${index + 1}-header`}
+                >
+                  <Typography sx={{ fontWeight: 600, fontSize: { xs: '16px', md: '18px' } }}>
+                    {faq.question}
+                  </Typography>
+                </StyledAccordionSummary>
+                <StyledAccordionDetails>
+                  <Typography sx={{ fontSize: { xs: '14px', md: '16px' }, lineHeight: 1.7 }}>
+                    {faq.answer}
+                  </Typography>
+                </StyledAccordionDetails>
+              </StyledAccordion>
+            ))}
+          </Box>
         </Box>
       </Container>
     </Container>

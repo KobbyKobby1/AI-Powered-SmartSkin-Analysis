@@ -23,13 +23,16 @@
     "@mui/material": "^6.1.7",
     "@mui/styles": "^6.1.4",
     "@paystack/inline-js": "^2.22.1",
+    "@next/bundle-analyzer": "^14.0.0",
     "axios": "^1.7.7",
     "libphonenumber-js": "^1.11.17",
     "next": "^15.1.4",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-hook-form": "^7.54.2",
+    "react-intersection-observer": "^9.16.0",
     "yup": "^1.6.1"
+    
   },
   "devDependencies": {
     "@eslint/js": "^9.11.1",

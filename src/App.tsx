@@ -72,7 +72,7 @@ const App = () => {
     switch (view) {
       case 'Gender':
         setViewTitle('');
-        // setPreviousView('HomePage');
+        setPreviousView('HomePage'); // ✅ FIXED: Uncommented to enable back to HomePage
         break;
 
       case 'Age':
@@ -112,8 +112,10 @@ const App = () => {
     }
 
     setHasHeader(view !== 'HomePage');
-    setCanGoBack(view !== 'Gender');
-    setCanGoBack(view !== 'Recommendation');
+    
+    // ✅ FIXED: Proper logic for when back button should be shown
+    const showBackButton = view !== 'Gender' && view !== 'Recommendation' && view !== 'HomePage';
+    setCanGoBack(showBackButton);
   }, [view]);
 
   // const closeSkinAnalysis = () => {
@@ -137,7 +139,14 @@ const App = () => {
       case 'PicCapture':
         window.OrboSmartCapture.stop();
         break;
+        
+      case 'Gender':
+        // ✅ FIXED: Explicitly handle Gender page back navigation
+        setView('HomePage');
+        return;
     }
+    
+    // For all other cases, use the previousView
     setView(previousView);
   };
 
