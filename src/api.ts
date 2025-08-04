@@ -34,77 +34,197 @@ export class Api {
     }
   }
 
-  // NEW: Method to detect skin type from image
+  // FIXED: Method to detect skin type from image with consistent results
   async detectSkinType(
-    _sessionId: string,
-    _imageBlob: Blob,
+    sessionId: string,
+    imageBlob: Blob,
     _gender?: string,
     _ageRange?: string
   ): Promise<AIDetectionResult> {
-    // For now, simulate the API call since the endpoint might not exist yet
+    // For now, simulate the API call with CONSISTENT results based on image properties
     // Replace this with actual API call when ready
     
     // Simulate processing time
     await new Promise(resolve => setTimeout(resolve, 3000));
     
-    // Mock realistic results based on common skin type distributions
-    const mockSkinTypes: AIDetectionResult['skinType'][] = ['combination', 'oily', 'normal', 'dry', 'sensitive'];
-    const randomSkinType = mockSkinTypes[Math.floor(Math.random() * mockSkinTypes.length)];
+    // Create a consistent "fingerprint" from the image blob to ensure same results for same image
+    const imageSize = imageBlob.size;
+    const imageType = imageBlob.type;
+    
+    // Create a consistent hash-like value from image properties
+    const seedValue = (imageSize % 1000) + (imageType.length * 17) + (sessionId ? sessionId.length * 7 : 42);
+    
+    // Use this seed to create consistent "random" values
+    const deterministicRandom = (seed: number, index: number = 0) => {
+      const x = Math.sin(seed + index) * 10000;
+      return x - Math.floor(x);
+    };
+    
+    // Determine skin type based on consistent seed
+    const skinTypeIndex = Math.floor(deterministicRandom(seedValue, 1) * 5);
+    const skinTypes: AIDetectionResult['skinType'][] = ['normal', 'dry', 'oily', 'combination', 'sensitive'];
+    const detectedSkinType = skinTypes[skinTypeIndex];
+    
+    // Generate consistent confidence (75-95% range)
+    const confidence = Math.floor(deterministicRandom(seedValue, 2) * 20) + 75;
+    
+    // Generate consistent analysis scores
+    const oilinessScore = Math.floor(deterministicRandom(seedValue, 3) * 100);
+    const poreSizeScore = Math.floor(deterministicRandom(seedValue, 4) * 100);
+    const textureScore = Math.floor(deterministicRandom(seedValue, 5) * 100);
+    const sensitivityScore = Math.floor(deterministicRandom(seedValue, 6) * 100);
+    const hydrationScore = Math.floor(deterministicRandom(seedValue, 7) * 100);
+    
+    // Create skin type specific analysis
+    const getSkinTypeSpecificAnalysis = (skinType: AIDetectionResult['skinType']) => {
+      switch (skinType) {
+        case 'oily':
+          return {
+            oiliness: {
+              score: Math.max(60, oilinessScore),
+              zones: ['T-zone elevated', 'Cheeks elevated', 'Overall oily appearance']
+            },
+            poreSize: {
+              score: Math.max(60, poreSizeScore),
+              description: 'Large, visible pores throughout face, particularly prominent in T-zone'
+            },
+            texture: {
+              score: Math.min(60, textureScore),
+              description: 'Uneven texture with visible shine and enlarged pores'
+            },
+            sensitivity: {
+              score: Math.min(40, sensitivityScore),
+              description: 'Low sensitivity levels, skin tolerates most products well'
+            },
+            hydration: {
+              score: Math.max(50, hydrationScore),
+              description: 'Adequate hydration levels, though excess oil production is present'
+            }
+          };
+        case 'dry':
+          return {
+            oiliness: {
+              score: Math.min(30, oilinessScore),
+              zones: ['Minimal oil production', 'Tight feeling areas', 'Overall dry appearance']
+            },
+            poreSize: {
+              score: Math.min(40, poreSizeScore),
+              description: 'Small, barely visible pores throughout face'
+            },
+            texture: {
+              score: Math.min(50, textureScore),
+              description: 'Rough texture with visible flaking and tight feeling'
+            },
+            sensitivity: {
+              score: Math.max(60, sensitivityScore),
+              description: 'Moderate to high sensitivity, prone to irritation'
+            },
+            hydration: {
+              score: Math.min(40, hydrationScore),
+              description: 'Low hydration levels detected, skin appears dull and tight'
+            }
+          };
+        case 'combination':
+          return {
+            oiliness: {
+              score: Math.floor((oilinessScore % 40) + 40), // 40-80 range
+              zones: ['T-zone elevated', 'Cheeks normal to dry', 'Mixed oil distribution']
+            },
+            poreSize: {
+              score: Math.floor((poreSizeScore % 40) + 40),
+              description: 'Large pores in T-zone, smaller pores on cheeks and outer face'
+            },
+            texture: {
+              score: Math.floor((textureScore % 40) + 40),
+              description: 'Mixed texture - smooth in some areas, rougher in others'
+            },
+            sensitivity: {
+              score: Math.floor((sensitivityScore % 40) + 30),
+              description: 'Variable sensitivity - some areas more reactive than others'
+            },
+            hydration: {
+              score: Math.floor((hydrationScore % 40) + 40),
+              description: 'Variable hydration - adequate in oily zones, low in dry areas'
+            }
+          };
+        case 'sensitive':
+          return {
+            oiliness: {
+              score: Math.floor((oilinessScore % 60) + 20), // 20-80 range
+              zones: ['Variable oil production', 'Reaction-prone areas', 'Inconsistent patterns']
+            },
+            poreSize: {
+              score: Math.floor((poreSizeScore % 50) + 30),
+              description: 'Variable pore size, often appear more prominent when irritated'
+            },
+            texture: {
+              score: Math.min(50, textureScore),
+              description: 'Uneven texture with areas of irritation and redness'
+            },
+            sensitivity: {
+              score: Math.max(70, sensitivityScore),
+              description: 'High sensitivity indicators detected, prone to reactions'
+            },
+            hydration: {
+              score: Math.floor((hydrationScore % 50) + 30),
+              description: 'Variable hydration levels, often disrupted by sensitivity reactions'
+            }
+          };
+        case 'normal':
+        default:
+          return {
+            oiliness: {
+              score: Math.floor((oilinessScore % 40) + 30), // 30-70 range
+              zones: ['Balanced oil production', 'Minimal excess or deficiency', 'Even distribution']
+            },
+            poreSize: {
+              score: Math.floor((poreSizeScore % 40) + 30),
+              description: 'Medium-sized pores, well-balanced throughout face'
+            },
+            texture: {
+              score: Math.max(60, textureScore),
+              description: 'Smooth, even texture with minimal imperfections'
+            },
+            sensitivity: {
+              score: Math.min(40, sensitivityScore),
+              description: 'Low sensitivity levels, skin tolerates most products well'
+            },
+            hydration: {
+              score: Math.max(60, hydrationScore),
+              description: 'Normal hydration levels, skin appears healthy and balanced'
+            }
+          };
+      }
+    };
+    
+    const analysis = getSkinTypeSpecificAnalysis(detectedSkinType);
     
     const mockResult: AIDetectionResult = {
-      skinType: randomSkinType,
-      confidence: Math.floor(Math.random() * 20) + 80, // 80-99% confidence
-      analysis: {
-        oiliness: {
-          score: Math.floor(Math.random() * 100),
-          zones: randomSkinType === 'combination' 
-            ? ['T-zone elevated', 'Cheeks normal'] 
-            : randomSkinType === 'oily' 
-            ? ['Overall elevated'] 
-            : ['Minimal throughout']
-        },
-        poreSize: {
-          score: Math.floor(Math.random() * 100),
-          description: randomSkinType === 'oily' 
-            ? 'Large, visible pores throughout face'
-            : randomSkinType === 'dry'
-            ? 'Small, barely visible pores'
-            : 'Medium-sized pores, more visible in T-zone'
-        },
-        texture: {
-          score: Math.floor(Math.random() * 100),
-          description: randomSkinType === 'sensitive'
-            ? 'Uneven texture with areas of irritation'
-            : randomSkinType === 'normal'
-            ? 'Smooth, even texture throughout'
-            : 'Generally smooth with some areas of concern'
-        },
-        sensitivity: {
-          score: Math.floor(Math.random() * 100),
-          description: randomSkinType === 'sensitive'
-            ? 'High sensitivity indicators detected'
-            : randomSkinType === 'normal'
-            ? 'Low sensitivity, well-tolerated skin'
-            : 'Moderate sensitivity levels'
-        },
-        hydration: {
-          score: Math.floor(Math.random() * 100),
-          description: randomSkinType === 'dry'
-            ? 'Low hydration levels detected'
-            : randomSkinType === 'oily'
-            ? 'Adequate hydration with excess oil production'
-            : 'Normal hydration levels'
-        }
-      },
+      skinType: detectedSkinType,
+      confidence: confidence,
+      analysis: analysis,
       recommendations: [
-        `Use products suitable for ${randomSkinType} skin`,
-        'Apply broad-spectrum SPF daily',
-        'Maintain consistent skincare routine'
+        `Use products specifically formulated for ${detectedSkinType} skin`,
+        'Apply broad-spectrum SPF daily to protect your skin',
+        'Maintain a consistent skincare routine for best results',
+        detectedSkinType === 'sensitive' ? 'Always patch test new products before full application' :
+        detectedSkinType === 'oily' ? 'Use oil-free, non-comedogenic products' :
+        detectedSkinType === 'dry' ? 'Focus on hydrating and moisturizing products' :
+        detectedSkinType === 'combination' ? 'Use different products for different areas of your face' :
+        'Maintain your current routine and protect from environmental damage'
       ]
     };
 
-    // Uncomment this when actual API is ready:
-    /*
+    // Log for debugging - this will show the same result for the same image
+    console.log('AI Detection Result (should be consistent for same image):', {
+      seedValue,
+      detectedSkinType,
+      confidence,
+      imageSize,
+      sessionId: sessionId.substring(0, 8) + '...'
+    });
+
+    /* Uncomment this when actual API is ready:
     const formData = new FormData();
     formData.append('session_id', sessionId);
     formData.append('image', imageBlob, `skin-type-detection-${new Date().getTime()}.png`);

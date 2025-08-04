@@ -170,9 +170,9 @@ const EnhancedQuestionnaire = () => {
     setUserKnowsSkinType
   } = useView();
   
+  // FIX: Initialize states from userInfo and keep them synchronized
   const [skin, setSkin] = useState(userInfo.skin);
-  const [age, setAge] = useState(Number(userInfo.age));
-  const [gender, setGender] = useState(userInfo.gender);
+  const [age, setAge] = useState(Number(userInfo.age) || 22);
   const [imgSelection, setImgSelection] = useState('');
   const [errors, setErrors] = useState({
     skin: '',
@@ -181,6 +181,21 @@ const EnhancedQuestionnaire = () => {
   });
   const theme = useTheme();
   const isXsUp = useMediaQuery(theme.breakpoints.up('sm'));
+
+  // FIX: Always use userInfo as the single source of truth - no local gender state
+  // This ensures the gender selected at the beginning is maintained throughout
+  
+  // Debug logging to track gender state
+  useEffect(() => {
+    console.log('🔍 Current userInfo.gender:', userInfo.gender);
+    console.log('🔍 Current view:', view);
+  }, [userInfo.gender, view]);
+
+  // Sync local age and skin state with userInfo when it changes
+  useEffect(() => {
+    setAge(Number(userInfo.age) || 22);
+    setSkin(userInfo.skin);
+  }, [userInfo.age, userInfo.skin]);
 
   useEffect(() => {
     if (sessionId) return;
@@ -227,7 +242,7 @@ const EnhancedQuestionnaire = () => {
       valid = false;
     }
 
-    if (!gender.trim()) {
+    if (!userInfo.gender.trim()) {
       newErrors.gender = 'Gender is required.';
       valid = false;
     }
@@ -253,10 +268,18 @@ const EnhancedQuestionnaire = () => {
   };
 
   const handleGenderChange = (value: string) => {
-    setGender(value);
+    // FIX: Only update global state - no local gender state
+    setUserInfo({ ...userInfo, gender: value });
     if (value) {
       setErrors((prev) => ({ ...prev, gender: '' }));
     }
+    console.log('✅ Gender changed to:', value);
+  };
+
+  const handleAgeChange = (newAge: number) => {
+    setAge(newAge);
+    // FIX: Immediately update userInfo when age changes
+    setUserInfo({ ...userInfo, age: String(newAge) });
   };
 
   const handleImgSelection = (value: string) => {
@@ -287,7 +310,16 @@ const EnhancedQuestionnaire = () => {
       } else {
         // User knows skin type - validate and proceed normally
         if (handleValidation()) {
-          setUserInfo({ skin, gender, age: String(age), name: '', email: userInfo.email, phone: userInfo.phone });
+          // FIX: Use userInfo values directly
+          const updatedUserInfo = { 
+            ...userInfo,
+            skin, 
+            age: String(age), 
+            name: userInfo.name || '', 
+            email: userInfo.email || '', 
+            phone: userInfo.phone || ''
+          };
+          setUserInfo(updatedUserInfo);
           setView('Details');
         }
       }
@@ -302,7 +334,8 @@ const EnhancedQuestionnaire = () => {
     
     try {
       const api = new Api();
-      const result = await api.detectSkinType(sessionId, imageFile, gender, String(age));
+      // FIX: Use userInfo.gender instead of local state
+      const result = await api.detectSkinType(sessionId, imageFile, userInfo.gender, String(age));
       setAiDetectionResult(result);
       setView('AIResults');
     } catch (error) {
@@ -320,11 +353,21 @@ const EnhancedQuestionnaire = () => {
   const handleSubmit = () => {
     if (userKnowsSkinType === false) {
       // For "No" path, we don't need skin type validation yet
+      // userInfo should already have the correct gender and age
       setView('PicCapture');
     } else {
       // For "Yes" path, validate as usual
       if (handleValidation()) {
-        setUserInfo({ skin, gender, age: String(age), name: '', email: userInfo.email, phone: userInfo.phone });
+        // FIX: Update userInfo with skin selection, gender and age should already be set
+        const updatedUserInfo = { 
+          ...userInfo,
+          skin,
+          age: String(age), 
+          name: userInfo.name || '', 
+          email: userInfo.email || '', 
+          phone: userInfo.phone || ''
+        };
+        setUserInfo(updatedUserInfo);
         setView('PicCapture');
       }
     }
@@ -333,14 +376,15 @@ const EnhancedQuestionnaire = () => {
   const confirmAIResult = () => {
     if (aiDetectionResult) {
       setSkin(aiDetectionResult.skinType);
-      setUserInfo({ 
-        skin: aiDetectionResult.skinType, 
-        gender, 
+      const updatedUserInfo = { 
+        ...userInfo,
+        skin: aiDetectionResult.skinType,
         age: String(age), 
-        name: '', 
-        email: userInfo.email, 
-        phone: userInfo.phone 
-      });
+        name: userInfo.name || '', 
+        email: userInfo.email || '', 
+        phone: userInfo.phone || ''
+      };
+      setUserInfo(updatedUserInfo);
       setView('Details');
     }
   };
@@ -396,7 +440,7 @@ const EnhancedQuestionnaire = () => {
               <Box sx={styles.inputContainer}>
                 <RadioGroup
                   row
-                  value={gender}
+                  value={userInfo.gender}
                   onChange={(e) => handleGenderChange(e.target.value)}
                   sx={{
                     display: 'flex',
@@ -419,7 +463,7 @@ const EnhancedQuestionnaire = () => {
                         padding: { xs: '2px', md: '4px' },
                         borderRadius: '25px',
                         backgroundImage: `url(${icon})`,
-                        border: gender === value ? '2.5px solid #98B727' : '1.5px solid #717171',
+                        border: userInfo.gender === value ? '2.5px solid #98B727' : '1.5px solid #717171',
                         borderColor: errors.gender && '#d32f2f',
                         borderWidth: errors.gender && '3px',
                         cursor: 'pointer',
@@ -451,10 +495,10 @@ const EnhancedQuestionnaire = () => {
                           textAlign: 'center',
                           fontFamily: 'DM Sans',
                           fontSize: { xs: '14px', md: '28px' },
-                          fontWeight: gender === value ? 700 : 400,
+                          fontWeight: userInfo.gender === value ? 700 : 400,
                           lineHeight: '32px',
                           margin: 0,
-                          textTransform: gender === value ? 'capitalize' : 'none',
+                          textTransform: userInfo.gender === value ? 'capitalize' : 'none',
                           '& .MuiTypography-root': {
                             fontWeight: 400,
                             fontSize: { xs: '14px', md: '18px' },
@@ -483,7 +527,7 @@ const EnhancedQuestionnaire = () => {
                 },
               }}
               onClick={() => {
-                gender ? setView('Age') : setErrors((prev) => ({ ...prev, gender: 'Gender is required' }));
+                userInfo.gender ? setView('Age') : setErrors((prev) => ({ ...prev, gender: 'Gender is required' }));
               }}
             >
               Next
@@ -569,7 +613,7 @@ const EnhancedQuestionnaire = () => {
                       justifyContent: 'center',
                       alignItems: 'center',
                     }}
-                    onClick={() => age !== 1 && setAge(age - 1)}
+                    onClick={() => age !== 1 && handleAgeChange(age - 1)}
                   >
                     <Typography
                       sx={{
@@ -604,7 +648,7 @@ const EnhancedQuestionnaire = () => {
                       justifyContent: 'center',
                       alignItems: 'center',
                     }}
-                    onClick={() => setAge(age + 1)}
+                    onClick={() => handleAgeChange(age + 1)}
                   >
                     <Typography
                       sx={{
@@ -1106,6 +1150,7 @@ const EnhancedQuestionnaire = () => {
             padding: '16px',
           }}
         >
+          {/* Debug logs are moved to an effect or outside of JSX */}
           <Box
             sx={{
               display: 'flex',
@@ -1167,9 +1212,10 @@ const EnhancedQuestionnaire = () => {
                           borderColor: errors.skin && '#d32f2f',
                           borderWidth: errors.skin && '3px',
                           backgroundColor: '#FBFFEB',
+                          // FIX: Use userInfo.gender directly as source of truth
                           backgroundImage: {
-                            md: gender === 'male' ? `url(${maleIcon.src})` : `url(${femaleIcon.src})`,
-                            sx: 'none',
+                            md: userInfo.gender === 'male' ? `url(${maleIcon.src})` : `url(${femaleIcon.src})`,
+                            xs: 'none',
                           },
                           backgroundSize: 'contain',
                           cursor: 'pointer',
