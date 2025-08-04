@@ -4,7 +4,6 @@ const nextConfig = {
   distDir: './build',
   images: { unoptimized: true },
   compress: true,
-  swcMinify: true,
   experimental: {
     optimizePackageImports: ['@mui/material', '@mui/icons-material'],
   },

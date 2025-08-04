@@ -14,6 +14,7 @@ export interface OutputScore {
   color: string;
   value: number;
 }
+
 export interface Product {
   cat_sku_code: string;
   name: string;
@@ -30,6 +31,20 @@ export interface Recommendation {
   name: string;
   count: number;
   products: Product[];
+}
+
+// New interface for AI detection results
+export interface AIDetectionResult {
+  skinType: 'normal' | 'dry' | 'oily' | 'combination' | 'sensitive';
+  confidence: number;
+  analysis: {
+    oiliness: { score: number; zones: string[] };
+    poreSize: { score: number; description: string };
+    texture: { score: number; description: string };
+    sensitivity: { score: number; description: string };
+    hydration?: { score: number; description: string };
+  };
+  recommendations?: string[];
 }
 
 interface Snackbar {
@@ -55,7 +70,13 @@ interface ViewType {
   setCapturedPic: (pic: Blob | null) => void;
   snackbar: Snackbar | null;
   setSnackbar: (snackbar: Snackbar | null) => void;
+  // New properties for AI detection flow
+  aiDetectionResult: AIDetectionResult | null;
+  setAiDetectionResult: (result: AIDetectionResult | null) => void;
+  userKnowsSkinType: boolean | null;
+  setUserKnowsSkinType: (knows: boolean | null) => void;
   clear: () => void;
+  gender?: string;
 }
 
 const Context = createContext<ViewType | undefined>(undefined);
@@ -76,11 +97,16 @@ export const ViewProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
   const [capturedPic, setCapturedPic] = useState<Blob | null>(null);
   const [snackbar, setSnackbar] = useState<Snackbar | null>(null);
+  
+  // New states for AI detection flow
+  const [aiDetectionResult, setAiDetectionResult] = useState<AIDetectionResult | null>(null);
+  const [userKnowsSkinType, setUserKnowsSkinType] = useState<boolean | null>(null);
+
   const clear = () => {
     setSessionId(null);
     setUserInfo({
       name: '',
-      age: '45+',
+      age: '22',
       skin: '',
       gender: '',
       phone: '',
@@ -89,48 +115,23 @@ export const ViewProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setCapturedPic(null);
     setFallbackProductImage('');
     setOutputScore([]);
-    setOutputScore([]);
     setRecommendations([]);
-    setView('Questionnaire');
+    setAiDetectionResult(null);
+    setUserKnowsSkinType(null);
+    setView('Gender');
   };
 
   useEffect(() => {
     const rootDiv = document.getElementById('orbo-cc-skin-analyzer-container');
-    // const topBox = document.createElement('div');
-    // const bottomBox = document.createElement('div');
     if (rootDiv) {
       if (view === 'Details') {
-        // if (window.innerWidth <= 768) {
-        //     rootDiv.style.backgroundImage = 'url("https://client-skincare-products.s3.ap-south-1.amazonaws.com/face-shop/home_screen_mobile.png")';
-        // } else {
-        //     rootDiv.style.backgroundImage = 'url("https://client-skincare-products.s3.ap-south-1.amazonaws.com/face-shop/home_screen_web.png")';
-        // }
+        // Add any specific styling for details view if needed
       } else if (view === 'HomePage') {
-        // topBox.style.position = 'absolute';
-        // topBox.style.top = '0';
-        // topBox.style.left = '0';
-        // topBox.style.width = '100%';
-        // topBox.style.height = '22.477px';
-        // topBox.style.backgroundColor = '#547D5B';
-        // bottomBox.style.position = 'absolute';
-        // bottomBox.style.bottom = '0';
-        // bottomBox.style.left = '0';
-        // bottomBox.style.width = '100%';
-        // bottomBox.style.height = '22.477px';
-        // bottomBox.style.backgroundColor = '#547D5B';
-        // rootDiv.appendChild(topBox);
-        // rootDiv.appendChild(bottomBox);
+        // Add any specific styling for home page if needed
       } else {
         rootDiv.style.backgroundImage = 'none';
       }
     }
-
-    return () => {
-      // if (rootDiv) {
-      //     if (topBox) topBox.remove();
-      //     if (bottomBox) bottomBox.remove();
-      // }
-    };
   }, [view]);
 
   return (
@@ -152,6 +153,10 @@ export const ViewProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         setCapturedPic,
         snackbar,
         setSnackbar,
+        aiDetectionResult,
+        setAiDetectionResult,
+        userKnowsSkinType,
+        setUserKnowsSkinType,
         clear,
       }}
     >

@@ -10,7 +10,6 @@ import { useEffect, useState } from 'react';
 import { useSnackbar } from './components/Snackbar/useSnackbar';
 import CustomSnackbar from './components/Snackbar/CustomSnackbar';
 import ArrowBackIosIcon from '@mui/icons-material/ArrowBackIos';
-// import CloseIcon from '@mui/icons-material/Close';
 import styles from './styles';
 import { Api } from './api';
 
@@ -21,7 +20,16 @@ declare global {
 }
 
 const App = () => {
-  const { view, setView, snackbar, setSessionId, setSnackbar } = useView();
+  const { 
+    view, 
+    setView, 
+    snackbar, 
+    setSessionId, 
+    setSnackbar, 
+    userKnowsSkinType,
+    setUserKnowsSkinType,
+    setAiDetectionResult
+  } = useView();
 
   const { snackbarOpen, snackbarMessage, snackbarSeverity, showSnackbar, handleSnackbarClose } = useSnackbar();
 
@@ -49,7 +57,6 @@ const App = () => {
             snackbarSeverity: 'error',
           });
         });
-      // setView('HomePage');
     };
 
     if (openButton) {
@@ -72,7 +79,7 @@ const App = () => {
     switch (view) {
       case 'Gender':
         setViewTitle('');
-        setPreviousView('HomePage'); // ✅ FIXED: Uncommented to enable back to HomePage
+        setPreviousView('HomePage');
         break;
 
       case 'Age':
@@ -80,14 +87,24 @@ const App = () => {
         setPreviousView('Gender');
         break;
 
-      case 'SkinType':
+      case 'KnowSkinType':
         setViewTitle('');
         setPreviousView('Age');
         break;
 
+      case 'SkinType':
+        setViewTitle('');
+        setPreviousView(userKnowsSkinType ? 'KnowSkinType' : 'AIResults');
+        break;
+
+      case 'AIResults':
+        setViewTitle('AI Skin Analysis Results');
+        setPreviousView('CaptureUpload');
+        break;
+
       case 'CaptureUpload':
         setViewTitle('');
-        setPreviousView('SkinType');
+        setPreviousView(userKnowsSkinType ? 'SkinType' : 'KnowSkinType');
         break;
 
       case 'PicCapture':
@@ -97,7 +114,7 @@ const App = () => {
 
       case 'Details':
         setViewTitle('');
-        setPreviousView('CaptureUpload');
+        setPreviousView(userKnowsSkinType === false ? 'AIResults' : 'CaptureUpload');
         break;
 
       case 'OTP':
@@ -107,29 +124,15 @@ const App = () => {
 
       case 'Recommendation':
         setViewTitle('Here is Your Skin Analysis Report');
-        // setPreviousView('Details');
         break;
     }
 
     setHasHeader(view !== 'HomePage');
     
-    // ✅ FIXED: Proper logic for when back button should be shown
+    // Logic for when back button should be shown
     const showBackButton = view !== 'Gender' && view !== 'Recommendation' && view !== 'HomePage';
     setCanGoBack(showBackButton);
-  }, [view]);
-
-  // const closeSkinAnalysis = () => {
-  //   switch (view) {
-  //     case "PicCapture":
-  //       window.OrboSmartCapture.stop();
-  //       break;
-  //   }
-  //   const customEvent = new CustomEvent("skinAnalysisClose", {
-  //     bubbles: true,
-  //   });
-  //   document.dispatchEvent(customEvent);
-  //   clear();
-  // };
+  }, [view, userKnowsSkinType]);
 
   const handleBackClick = () => {
     switch (view) {
@@ -141,9 +144,21 @@ const App = () => {
         break;
         
       case 'Gender':
-        // ✅ FIXED: Explicitly handle Gender page back navigation
         setView('HomePage');
         return;
+
+      case 'AIResults':
+        // If user rejects AI results, they might end up back at capture
+        setAiDetectionResult(null);
+        break;
+
+      case 'SkinType':
+        // If coming from AI flow, clear the detection result
+        if (userKnowsSkinType === true && previousView === 'AIResults') {
+          setAiDetectionResult(null);
+          setUserKnowsSkinType(null);
+        }
+        break;
     }
     
     // For all other cases, use the previousView
@@ -169,7 +184,6 @@ const App = () => {
           padding: { xs: '10px 20px', md: '20px 40px' },
         }}
       >
-        {/* {view !== "Gender" &&  */}
         <Box sx={{ position: 'absolute', top: { xs: '10px', md: '20px' }, left: { xs: '10px', md: '40px' } }}>
           <ArrowBackIosIcon
             sx={{
@@ -182,7 +196,6 @@ const App = () => {
             onClick={() => handleBackClick()}
           />
         </Box>
-        {/* } */}
 
         <Box>
           <Typography
@@ -196,16 +209,17 @@ const App = () => {
         </Box>
 
         <Box sx={{ position: 'absolute', top: { xs: '10px', md: '20px' }, right: { xs: '10px', md: '40px' } }}>
-          {/* <CloseIcon sx={{
-            width: "32px",
-            height: "32px",
-            cursor: "pointer",
-          }} onClick={() => closeSkinAnalysis()} /> */}
+          {/* Close button if needed */}
         </Box>
       </Box>
       <Box>
         {view === 'HomePage' && <HomePage />}
-        {(view === 'Gender' || view === 'Age' || view === 'SkinType' || view === 'CaptureUpload') && <Questionnaire />}
+        {(view === 'Gender' || 
+          view === 'Age' || 
+          view === 'KnowSkinType' || 
+          view === 'SkinType' || 
+          view === 'CaptureUpload' ||
+          view === 'AIResults') && <Questionnaire />}
         {view === 'PicCapture' && <PicCapture />}
         {(view === 'Details' || view === 'OTP') && <Details />}
         {view === 'Recommendation' && <Recommendation />}

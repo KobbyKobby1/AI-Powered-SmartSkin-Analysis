@@ -15,8 +15,6 @@ import Link from 'next/link';
 import { logo } from '../../assets';
 import { usePathname } from 'next/navigation';
 import { Container } from '@mui/material';
-// import Signdialog from './Signdialog';
-// import Registerdialog from './Registerdialog';
 
 interface NavigationItem {
   name: string;
@@ -66,10 +64,6 @@ const Navbar = () => {
                 </Link>
               ))}
             </Box>
-
-            {/* Sign In and Register Dialogs */}
-            {/* <Signdialog /> */}
-            {/* <Registerdialog /> */}
 
             {/* Drawer for Mobile View */}
             <IconButton

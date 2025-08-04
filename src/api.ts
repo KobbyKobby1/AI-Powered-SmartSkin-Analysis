@@ -1,4 +1,4 @@
-import { OutputScore, Recommendation } from './context';
+import { OutputScore, Recommendation, AIDetectionResult } from './context';
 
 export class Api {
   //DEV
@@ -32,6 +32,105 @@ export class Api {
     } else {
       throw new Error('Failed to get session id');
     }
+  }
+
+  // NEW: Method to detect skin type from image
+  async detectSkinType(
+    _sessionId: string,
+    _imageBlob: Blob,
+    _gender?: string,
+    _ageRange?: string
+  ): Promise<AIDetectionResult> {
+    // For now, simulate the API call since the endpoint might not exist yet
+    // Replace this with actual API call when ready
+    
+    // Simulate processing time
+    await new Promise(resolve => setTimeout(resolve, 3000));
+    
+    // Mock realistic results based on common skin type distributions
+    const mockSkinTypes: AIDetectionResult['skinType'][] = ['combination', 'oily', 'normal', 'dry', 'sensitive'];
+    const randomSkinType = mockSkinTypes[Math.floor(Math.random() * mockSkinTypes.length)];
+    
+    const mockResult: AIDetectionResult = {
+      skinType: randomSkinType,
+      confidence: Math.floor(Math.random() * 20) + 80, // 80-99% confidence
+      analysis: {
+        oiliness: {
+          score: Math.floor(Math.random() * 100),
+          zones: randomSkinType === 'combination' 
+            ? ['T-zone elevated', 'Cheeks normal'] 
+            : randomSkinType === 'oily' 
+            ? ['Overall elevated'] 
+            : ['Minimal throughout']
+        },
+        poreSize: {
+          score: Math.floor(Math.random() * 100),
+          description: randomSkinType === 'oily' 
+            ? 'Large, visible pores throughout face'
+            : randomSkinType === 'dry'
+            ? 'Small, barely visible pores'
+            : 'Medium-sized pores, more visible in T-zone'
+        },
+        texture: {
+          score: Math.floor(Math.random() * 100),
+          description: randomSkinType === 'sensitive'
+            ? 'Uneven texture with areas of irritation'
+            : randomSkinType === 'normal'
+            ? 'Smooth, even texture throughout'
+            : 'Generally smooth with some areas of concern'
+        },
+        sensitivity: {
+          score: Math.floor(Math.random() * 100),
+          description: randomSkinType === 'sensitive'
+            ? 'High sensitivity indicators detected'
+            : randomSkinType === 'normal'
+            ? 'Low sensitivity, well-tolerated skin'
+            : 'Moderate sensitivity levels'
+        },
+        hydration: {
+          score: Math.floor(Math.random() * 100),
+          description: randomSkinType === 'dry'
+            ? 'Low hydration levels detected'
+            : randomSkinType === 'oily'
+            ? 'Adequate hydration with excess oil production'
+            : 'Normal hydration levels'
+        }
+      },
+      recommendations: [
+        `Use products suitable for ${randomSkinType} skin`,
+        'Apply broad-spectrum SPF daily',
+        'Maintain consistent skincare routine'
+      ]
+    };
+
+    // Uncomment this when actual API is ready:
+    /*
+    const formData = new FormData();
+    formData.append('session_id', sessionId);
+    formData.append('image', imageBlob, `skin-type-detection-${new Date().getTime()}.png`);
+    
+    if (gender) formData.append('gender', gender);
+    if (ageRange) formData.append('age_range', ageRange);
+
+    const response = await fetch(`${this.skinTypeDetectionUrl}?clientkey=${this.clientKey}`, {
+      method: 'POST',
+      body: formData,
+    });
+
+    const data = await response.json();
+    if (data.success && data.statusCode === 200) {
+      return {
+        skinType: data.data.skin_type,
+        confidence: data.data.confidence,
+        analysis: data.data.analysis,
+        recommendations: data.data.recommendations || []
+      };
+    } else {
+      throw new Error(data.error?.message || 'Failed to detect skin type');
+    }
+    */
+
+    return mockResult;
   }
 
   // Method to get skin scores and recommendations
