@@ -1,3 +1,4 @@
+// src/components/FAQ/index.tsx
 'use client';
 
 import Accordion from '@mui/material/Accordion';
@@ -7,6 +8,7 @@ import Typography from '@mui/material/Typography';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { styled } from '@mui/material/styles';
 import { Box, Container } from '@mui/material';
+import { useEffect, useRef, useState } from 'react';
 
 const StyledAccordion = styled(Accordion)({
   marginBottom: '20px',
@@ -45,6 +47,30 @@ const StyledAccordionDetails = styled(AccordionDetails)({
 });
 
 const Faq = () => {
+  const [isVisible, setIsVisible] = useState(false);
+  const [contentVisible, setContentVisible] = useState(false);
+  const [faqsVisible, setFaqsVisible] = useState(false);
+  const sectionRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsVisible(true);
+          setTimeout(() => setContentVisible(true), 200);
+          setTimeout(() => setFaqsVisible(true), 400);
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    if (sectionRef.current) {
+      observer.observe(sectionRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, []);
+
   const faqs = [
     {
       question: 'What is Smartskin Africa?',
@@ -83,7 +109,7 @@ const Faq = () => {
   return (
     <Container maxWidth={false} sx={{ background: '#fafbfc', padding: { xs: '60px 0', md: '120px 0' } }}>
       <Container maxWidth="lg">
-        <Box sx={{ py: { xs: 4, md: 6 } }}>
+        <Box sx={{ py: { xs: 4, md: 6 } }} ref={sectionRef}>
           <Box sx={{ textAlign: 'center', mb: { xs: 6, md: 8 } }}>
             <Box
               sx={{
@@ -91,6 +117,10 @@ const Faq = () => {
                 height: '2px',
                 background: 'linear-gradient(135deg, #E5BC76 0%, #C6A461 100%)',
                 margin: '0 auto 40px',
+                opacity: isVisible ? 1 : 0,
+                transform: isVisible ? 'scaleX(1)' : 'scaleX(0)',
+                transition: 'all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+                transformOrigin: 'center',
               }}
             />
             
@@ -104,6 +134,10 @@ const Faq = () => {
                 color: '#1a1a1a',
                 letterSpacing: '-0.02em',
                 mb: 3,
+                opacity: contentVisible ? 1 : 0,
+                transform: contentVisible ? 'translateY(0)' : 'translateY(30px)',
+                transition: 'all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+                transitionDelay: '0.1s',
               }}
             >
               Frequently Asked{' '}
@@ -127,6 +161,10 @@ const Faq = () => {
                 maxWidth: '600px',
                 margin: '0 auto',
                 lineHeight: { xs: '24px', md: '28px' },
+                opacity: contentVisible ? 1 : 0,
+                transform: contentVisible ? 'translateY(0)' : 'translateY(20px)',
+                transition: 'all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+                transitionDelay: '0.2s',
               }}
             >
               Everything you need to know about Smartskin Africa and how our AI-powered platform can transform your skincare routine.
@@ -135,22 +173,32 @@ const Faq = () => {
 
           <Box sx={{ maxWidth: '800px', margin: '0 auto' }}>
             {faqs.map((faq, index) => (
-              <StyledAccordion key={index}>
-                <StyledAccordionSummary
-                  expandIcon={<ExpandMoreIcon />}
-                  aria-controls={`panel${index + 1}-content`}
-                  id={`panel${index + 1}-header`}
-                >
-                  <Typography sx={{ fontWeight: 600, fontSize: { xs: '16px', md: '18px' } }}>
-                    {faq.question}
-                  </Typography>
-                </StyledAccordionSummary>
-                <StyledAccordionDetails>
-                  <Typography sx={{ fontSize: { xs: '14px', md: '16px' }, lineHeight: 1.7 }}>
-                    {faq.answer}
-                  </Typography>
-                </StyledAccordionDetails>
-              </StyledAccordion>
+              <Box
+                key={index}
+                sx={{
+                  opacity: faqsVisible ? 1 : 0,
+                  transform: faqsVisible ? 'translateY(0)' : 'translateY(30px)',
+                  transition: 'all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+                  transitionDelay: `${0.1 * index}s`,
+                }}
+              >
+                <StyledAccordion>
+                  <StyledAccordionSummary
+                    expandIcon={<ExpandMoreIcon />}
+                    aria-controls={`panel${index + 1}-content`}
+                    id={`panel${index + 1}-header`}
+                  >
+                    <Typography sx={{ fontWeight: 600, fontSize: { xs: '16px', md: '18px' } }}>
+                      {faq.question}
+                    </Typography>
+                  </StyledAccordionSummary>
+                  <StyledAccordionDetails>
+                    <Typography sx={{ fontSize: { xs: '14px', md: '16px' }, lineHeight: 1.7 }}>
+                      {faq.answer}
+                    </Typography>
+                  </StyledAccordionDetails>
+                </StyledAccordion>
+              </Box>
             ))}
           </Box>
         </Box>

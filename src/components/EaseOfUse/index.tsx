@@ -1,9 +1,11 @@
+// src/components/EaseOfUse/index.tsx
 'use client';
 
 import { Container, Grid2, Typography, Box } from '@mui/material';
 import Image from 'next/image';
 import { recommend } from '../../assets';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
+import { useEffect, useRef, useState } from 'react';
 
 const features = [
   {
@@ -25,9 +27,35 @@ const features = [
 ];
 
 const EaseOfUse = () => {
+  const [, setIsVisible] = useState(false);
+  const [contentVisible, setContentVisible] = useState(false);
+  const [imageVisible, setImageVisible] = useState(false);
+  const [featuresVisible, setFeaturesVisible] = useState(false);
+  const sectionRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsVisible(true);
+          setTimeout(() => setContentVisible(true), 200);
+          setTimeout(() => setImageVisible(true), 400);
+          setTimeout(() => setFeaturesVisible(true), 600);
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    if (sectionRef.current) {
+      observer.observe(sectionRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, []);
+
   return (
     <Container maxWidth="lg" sx={{ py: { xs: 8, md: 16 } }}>
-      <Grid2 container spacing={{ xs: 4, md: 8 }} alignItems="center">
+      <Grid2 container spacing={{ xs: 4, md: 8 }} alignItems="center" ref={sectionRef}>
         {/* Image Section */}
         <Grid2 size={{ xs: 12, lg: 6 }} order={{ xs: 2, lg: 1 }}>
           <Box
@@ -35,6 +63,10 @@ const EaseOfUse = () => {
               display: 'flex',
               justifyContent: 'center',
               alignItems: 'center',
+              opacity: imageVisible ? 1 : 0,
+              transform: imageVisible ? 'translateX(0) scale(1)' : 'translateX(-40px) scale(0.95)',
+              transition: 'all 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+              transitionDelay: '0.2s',
             }}
           >
             <Box
@@ -79,6 +111,10 @@ const EaseOfUse = () => {
                 color: '#1a1a1a',
                 letterSpacing: '-0.02em',
                 mb: { xs: 3, md: 4 },
+                opacity: contentVisible ? 1 : 0,
+                transform: contentVisible ? 'translateY(0)' : 'translateY(30px)',
+                transition: 'all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+                transitionDelay: '0.1s',
               }}
             >
               <Box
@@ -107,9 +143,12 @@ const EaseOfUse = () => {
                     borderRadius: '12px',
                     transition: 'all 0.3s ease',
                     cursor: 'pointer',
+                    opacity: featuresVisible ? 1 : 0,
+                    transform: featuresVisible ? 'translateX(0)' : 'translateX(-30px)',
+                    transitionDelay: `${0.1 * index}s`,
                     '&:hover': {
                       backgroundColor: 'rgba(229, 188, 118, 0.08)',
-                      transform: 'translateX(8px)',
+                      transform: featuresVisible ? 'translateX(8px)' : 'translateX(-30px)',
                       boxShadow: '0 4px 20px rgba(0, 0, 0, 0.05)',
                     },
                   }}

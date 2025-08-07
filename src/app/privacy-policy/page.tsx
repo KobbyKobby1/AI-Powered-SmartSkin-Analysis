@@ -1,7 +1,11 @@
+// src/app/privacy-policy/page.tsx
 'use client';
 
-import { Container, Typography, Box } from '@mui/material';
+import { Container, Typography, Box, Grid2, Card, CardContent } from '@mui/material';
 import { useEffect, useRef, useState } from 'react';
+import EmailIcon from '@mui/icons-material/Email';
+import PhoneIcon from '@mui/icons-material/Phone';
+import LocationOnIcon from '@mui/icons-material/LocationOn';
 
 const PrivacyPolicy = () => {
   const [isVisible, setIsVisible] = useState(false);
@@ -58,6 +62,27 @@ const PrivacyPolicy = () => {
     {
       title: "8. Changes to This Policy",
       content: "We may update this Privacy Policy periodically. Changes will be posted with a revised effective date, and continued use of our services constitutes acceptance of the updated terms."
+    }
+  ];
+
+  const contactInfo = [
+    {
+      icon: EmailIcon,
+      label: 'Email',
+      value: 'support@smartskinafrica.com',
+      href: 'mailto:support@smartskinafrica.com'
+    },
+    {
+      icon: PhoneIcon,
+      label: 'Phone',
+      value: '+233 55 059 0714',
+      href: 'tel:+233550590714'
+    },
+    {
+      icon: LocationOnIcon,
+      label: 'Address',
+      value: 'S-03 First Floor, Friendly Heights Building\nMahama Road, Tse Addo\nAccra – Ghana',
+      href: 'https://maps.google.com?q=S-03+First+Floor,+Friendly+Heights+Building,+Mahama+Road,+Tse+Addo,+Accra,+Ghana'
     }
   ];
 
@@ -172,45 +197,141 @@ const PrivacyPolicy = () => {
               </Box>
             ))}
 
-            {/* Contact Information */}
+            {/* Enhanced Contact Information Section */}
             <Box
               sx={{
                 mt: { xs: 6, md: 8 },
-                padding: { xs: '32px', md: '40px' },
-                background: 'linear-gradient(135deg, rgba(0, 121, 107, 0.08) 0%, rgba(229, 188, 118, 0.05) 100%)',
-                borderRadius: '20px',
-                border: '1px solid rgba(0, 121, 107, 0.15)',
                 opacity: sectionsVisible ? 1 : 0,
                 transform: sectionsVisible ? 'translateY(0)' : 'translateY(30px)',
                 transition: 'all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
                 transitionDelay: '1s',
               }}
             >
-              <Typography 
-                variant="h6" 
+              <Card
                 sx={{
-                  fontSize: { xs: '18px', md: '20px' },
-                  fontWeight: 600,
-                  color: '#1a1a1a',
-                  mb: 3,
+                  borderRadius: '20px',
+                  border: '1px solid rgba(0, 121, 107, 0.15)',
+                  background: 'linear-gradient(135deg, rgba(0, 121, 107, 0.08) 0%, rgba(229, 188, 118, 0.05) 100%)',
+                  overflow: 'hidden',
+                  boxShadow: '0 8px 32px rgba(0, 0, 0, 0.08)',
                 }}
               >
-                Contact Information
-              </Typography>
-              <Typography
-                sx={{
-                  fontSize: { xs: '14px', md: '16px' },
-                  lineHeight: 1.7,
-                  color: '#666',
-                  whiteSpace: 'pre-line',
-                }}
-              >
-                If you have any questions, concerns, or requests regarding this Privacy Policy or your personal data, you may contact us using the details below:
-                
-                <strong>Email:</strong> support@smartskinafrica.com
-                <strong>Phone:</strong> +233550590714
-                <strong>Address:</strong> S-03 First Floor, Friendly Heights Building, Mahama Road, Tse Addo, Accra – Ghana
-              </Typography>
+                <CardContent sx={{ p: { xs: 4, md: 6 } }}>
+                  <Typography 
+                    variant="h5" 
+                    sx={{
+                      fontSize: { xs: '20px', md: '24px' },
+                      fontWeight: 600,
+                      color: '#1a1a1a',
+                      mb: 2,
+                      textAlign: 'center',
+                    }}
+                  >
+                    Contact Information
+                  </Typography>
+                  
+                  <Typography
+                    sx={{
+                      fontSize: { xs: '14px', md: '16px' },
+                      color: '#666',
+                      textAlign: 'center',
+                      mb: 4,
+                      lineHeight: 1.6,
+                    }}
+                  >
+                    If you have any questions, concerns, or requests regarding this Privacy Policy or your personal data, 
+                    please don't hesitate to reach out to us using any of the methods below.
+                  </Typography>
+
+                  <Grid2 container spacing={3}>
+                    {contactInfo.map((contact, index) => (
+                      <Grid2 key={index} size={{ xs: 12, md: 4 }}>
+                        <Box
+                          component="a"
+                          href={contact.href}
+                          target={contact.label === 'Address' ? '_blank' : undefined}
+                          rel={contact.label === 'Address' ? 'noopener noreferrer' : undefined}
+                          sx={{
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            textAlign: 'center',
+                            padding: '24px 16px',
+                            backgroundColor: '#ffffff',
+                            borderRadius: '16px',
+                            textDecoration: 'none',
+                            color: 'inherit',
+                            transition: 'all 0.3s ease',
+                            border: '1px solid rgba(0, 0, 0, 0.06)',
+                            '&:hover': {
+                              transform: 'translateY(-4px)',
+                              boxShadow: '0 8px 30px rgba(0, 121, 107, 0.15)',
+                              borderColor: 'rgba(0, 121, 107, 0.2)',
+                            },
+                          }}
+                        >
+                          <Box
+                            sx={{
+                              width: 48,
+                              height: 48,
+                              borderRadius: '50%',
+                              backgroundColor: 'rgba(0, 121, 107, 0.1)',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              mb: 2,
+                            }}
+                          >
+                            <contact.icon sx={{ color: '#00796B', fontSize: 24 }} />
+                          </Box>
+                          
+                          <Typography
+                            variant="h6"
+                            sx={{
+                              fontSize: '16px',
+                              fontWeight: 600,
+                              color: '#00796B',
+                              mb: 1,
+                            }}
+                          >
+                            {contact.label}
+                          </Typography>
+                          
+                          <Typography
+                            sx={{
+                              fontSize: '14px',
+                              color: '#666',
+                              lineHeight: 1.5,
+                              whiteSpace: 'pre-line',
+                            }}
+                          >
+                            {contact.value}
+                          </Typography>
+                        </Box>
+                      </Grid2>
+                    ))}
+                  </Grid2>
+
+                  <Box
+                    sx={{
+                      mt: 4,
+                      pt: 3,
+                      borderTop: '1px solid rgba(0, 0, 0, 0.1)',
+                      textAlign: 'center',
+                    }}
+                  >
+                    <Typography
+                      sx={{
+                        fontSize: '12px',
+                        color: '#999',
+                        fontStyle: 'italic',
+                      }}
+                    >
+                      We typically respond to all inquiries within 24-48 hours during business days.
+                    </Typography>
+                  </Box>
+                </CardContent>
+              </Card>
             </Box>
           </Box>
         </Box>
