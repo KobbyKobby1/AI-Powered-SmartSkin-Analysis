@@ -34,7 +34,7 @@ export class Api {
     }
   }
 
-  // 🎯 NEW: Smart skin type detection using existing API
+  // 🎯 IMPROVED: Smart skin type detection using existing API
   async detectSkinType(
     sessionId: string,
     imageBlob: Blob,
@@ -42,11 +42,14 @@ export class Api {
     ageRange?: string
   ): Promise<AIDetectionResult> {
     
-    console.log('🔬 Using existing API to intelligently detect skin type...');
+    console.log('🔬 Starting intelligent skin type detection...');
     
     try {
       // 🎯 STEP 1: Call existing API with placeholder skin type
       const apiResult = await this.callExistingApiForDetection(sessionId, imageBlob, gender, ageRange);
+      
+      // Log the actual scores to debug
+      console.log('📊 Raw API Scores:', apiResult.scores);
       
       // 🎯 STEP 2: Analyze the scores to determine actual skin type
       const detectedSkinType = this.analyzeSkinTypeFromScores(apiResult.scores);
@@ -67,7 +70,7 @@ export class Api {
         recommendations: recommendations
       };
       
-      console.log('🎉 Successfully detected skin type from API scores:', result);
+      console.log('🎉 Successfully detected skin type:', result);
       return result;
       
     } catch (error) {
@@ -84,14 +87,14 @@ export class Api {
     ageRange?: string
   ): Promise<{ scores: OutputScore[]; recommendations: Recommendation[]; fallbackProductImage: string }> {
     
-    // 🎯 Strategy: Use "normal" as placeholder - API will analyze the actual image
+    // Use "normal" as placeholder - API will analyze the actual image
     const placeholderSkinType = "normal";
     const placeholderName = "AI_Detection_Analysis";
     
-    console.log('📡 Calling existing API with placeholder skin type...');
+    console.log('📡 Calling existing API for analysis...');
     
-    // Use existing working method!
-    return await this.getSkinScoresAndRecommendations(
+    // Use existing working method
+    const result = await this.getSkinScoresAndRecommendations(
       sessionId,
       imageBlob,
       placeholderSkinType,
@@ -99,52 +102,241 @@ export class Api {
       ageRange || '25',
       placeholderName
     );
+    
+    // Log the raw scores immediately after receiving them
+    console.log('📊 Raw API Scores received:', result.scores);
+    console.log('📊 Number of scores:', result.scores.length);
+    result.scores.forEach((score, i) => {
+      const colorName = score.color === '#FF6961' ? '🔴 RED' : 
+                       score.color === '#FFB347' ? '🟠 ORANGE' : 
+                       score.color === '#00FF00' ? '🟢 GREEN' : '⚪ UNKNOWN';
+      console.log(`  ${i}. ${score.name}: ${score.value} (${colorName})`);
+    });
+    
+    return result;
   }
 
-  // 🧠 SMART ANALYSIS: Determine skin type from score patterns
+  // 🧠 IMPROVED ANALYSIS: Better skin type detection from scores
   private analyzeSkinTypeFromScores(scores: OutputScore[]): AIDetectionResult['skinType'] {
     
-    console.log('🔍 Analyzing scores to detect skin type:', scores);
+    console.log('🔍 Analyzing scores to detect skin type...');
+    console.log('🔍 Number of scores received:', scores.length);
     
-    // 📊 Extract key indicators
-    const indicators = this.extractSkinIndicators(scores);
+    // Log each score individually for better debugging
+    scores.forEach((score, index) => {
+      console.log(`Score ${index}: name="${score.name}", value=${score.value}, color="${score.color}"`);
+    });
     
-    console.log('📈 Skin indicators:', indicators);
+    // Create a map of all scores for easier access
+    const scoreMap: { [key: string]: number } = {};
+    scores.forEach(score => {
+      scoreMap[score.name.toLowerCase()] = score.value;
+    });
     
-    // 🎯 Decision logic based on real dermatological patterns
+    console.log('📈 Score Map:', scoreMap);
     
-    // OILY SKIN INDICATORS
-    if (indicators.oiliness > 60 && indicators.pores > 50 && indicators.acne > 40) {
-      console.log('✅ Detected: OILY skin (high oil + large pores + acne tendency)');
-      return 'oily';
+    // Extract key indicators with more flexible matching
+    const indicators = this.extractImprovedSkinIndicators(scores, scoreMap);
+    
+    console.log('📊 Extracted Indicators:', indicators);
+    
+    // 🎯 IMPORTANT: Understanding the scoring system from your API
+    // RED (#FF6961) = Problems that need attention 
+    // ORANGE (#FFB347) = Average/moderate 
+    // GREEN (#00FF00) = Good (high scores = good)
+    
+    // Let's look for specific problem indicators from the actual scores
+    const problemScores = scores.filter(s => s.color === '#FF6961'); // Red = needs attention
+    const averageScores = scores.filter(s => s.color === '#FFB347'); // Orange = average
+    const goodScores = scores.filter(s => s.color === '#00FF00'); // Green = good
+    
+    console.log('🔴 Problem areas (red):', problemScores.map(s => `${s.name}:${s.value}`));
+    console.log('🟠 Average areas (orange):', averageScores.map(s => `${s.name}:${s.value}`));
+    console.log('🟢 Good areas (green):', goodScores.map(s => `${s.name}:${s.value}`));
+    
+    // Get actual score values for ALL skin indicators
+    const hydrationScore = scoreMap['hydration'] || scoreMap['moisture'] || 50;
+    const oilScore = scoreMap['oiliness'] || scoreMap['oil'] || scoreMap['sebum'] || scoreMap['oil_level'] || 50;
+    const rednessScore = scoreMap['redness'] || scoreMap['erythema'] || 50;
+    const sensitivityScore = scoreMap['sensitivity'] || scoreMap['reactive'] || 50;
+    const acneScore = scoreMap['acne'] || scoreMap['pimples'] || scoreMap['breakout'] || 50;
+    const poreScore = scoreMap['pores'] || scoreMap['enlarged_pores'] || scoreMap['pore_size'] || 50;
+    const drynessScore = scoreMap['dryness'] || scoreMap['dry_skin'] || scoreMap['dehydration'] || 50;
+    const textureScore = scoreMap['texture'] || scoreMap['skin_texture'] || 50;
+    const smoothnessScore = scoreMap['smoothness'] || 50;
+    const firmnessScore = scoreMap['firmness'] || 50;
+    const dullnessScore = scoreMap['skin_dullness'] || scoreMap['dullness'] || 50;
+    
+    console.log('📊 Critical skin type indicators:');
+    console.log('  Hydration:', hydrationScore, hydrationScore > 80 ? '(excellent)' : hydrationScore > 60 ? '(good)' : hydrationScore > 40 ? '(moderate)' : '(poor)');
+    console.log('  Oil/Sebum:', oilScore);
+    console.log('  Dryness:', drynessScore);
+    console.log('  Redness:', rednessScore, rednessScore > 80 ? '(no redness)' : rednessScore > 60 ? '(minimal)' : rednessScore > 40 ? '(some)' : '(significant)');
+    console.log('  Acne:', acneScore, acneScore > 80 ? '(clear)' : acneScore > 60 ? '(minimal)' : acneScore > 40 ? '(some)' : '(problematic)');
+    console.log('  Pores:', poreScore, poreScore > 80 ? '(refined)' : poreScore > 60 ? '(normal)' : poreScore > 40 ? '(visible)' : '(large)');
+    console.log('  Texture:', textureScore);
+    console.log('  Smoothness:', smoothnessScore);
+    console.log('  Dullness:', dullnessScore);
+    
+    // 🎯 DRY SKIN DETECTION - FIRST PRIORITY
+    // Check multiple dry skin indicators with more lenient thresholds
+    const dryIndicators = [];
+    
+    // Check hydration - even moderate levels can indicate dryness
+    if (hydrationScore < 60) dryIndicators.push('low_hydration');
+    
+    // Check for dryness/dehydration scores
+    if (drynessScore > 40) dryIndicators.push('dryness_present');
+    
+    // Check texture and smoothness - dry skin often has poor texture
+    if (textureScore < 60) dryIndicators.push('poor_texture');
+    if (smoothnessScore < 60) dryIndicators.push('rough_skin');
+    
+    // Check dullness - dry skin is often dull
+    if (dullnessScore < 60 || averageScores.some(s => s.name.toLowerCase().includes('dull'))) {
+      dryIndicators.push('dull_skin');
     }
     
-    // DRY SKIN INDICATORS  
-    if (indicators.hydration < 40 && indicators.oiliness < 30 && indicators.texture < 50) {
-      console.log('✅ Detected: DRY skin (low hydration + low oil + poor texture)');
+    // Check firmness - dry skin can lack firmness
+    if (firmnessScore < 60) dryIndicators.push('poor_firmness');
+    
+    // Check for any RED dry-related problems
+    const hasDryProblems = problemScores.some(s => {
+      const name = s.name.toLowerCase();
+      return name.includes('hydrat') || name.includes('moisture') || name.includes('dry') || 
+             name.includes('flak') || name.includes('dehydrat') || name.includes('tight');
+    });
+    
+    if (hasDryProblems) dryIndicators.push('red_dry_problems');
+    
+    // Check if multiple ORANGE scores suggest dryness
+    const dryOrangeScores = averageScores.filter(s => {
+      const name = s.name.toLowerCase();
+      return name.includes('texture') || name.includes('smooth') || name.includes('firm') || 
+             name.includes('dull') || name.includes('hydrat');
+    });
+    
+    if (dryOrangeScores.length >= 2) dryIndicators.push('multiple_dry_averages');
+    
+    console.log('🏜️ Dry indicators found:', dryIndicators);
+    
+    // DETECT DRY SKIN if we have enough indicators
+    if (dryIndicators.length >= 2 || 
+        hydrationScore < 50 || 
+        hasDryProblems ||
+        (hydrationScore < 70 && textureScore < 60)) {
+      console.log('✅ Detected: DRY skin (multiple dry indicators present)');
       return 'dry';
     }
     
-    // SENSITIVE SKIN INDICATORS
-    if (indicators.redness > 50 && indicators.sensitivity > 60 && indicators.irritation > 40) {
-      console.log('✅ Detected: SENSITIVE skin (high redness + sensitivity + irritation)');
+    // 🎯 OILY SKIN DETECTION - SECOND PRIORITY
+    const oilyIndicators = [];
+    
+    // Check oil levels
+    if (oilScore > 60) oilyIndicators.push('high_oil');
+    
+    // Check pores - lower scores mean larger pores
+    if (poreScore < 50) oilyIndicators.push('large_pores');
+    
+    // Check acne - lower scores mean more acne
+    if (acneScore < 50) oilyIndicators.push('acne_present');
+    
+    // Check for RED oily problems
+    const hasOilProblems = problemScores.some(s => {
+      const name = s.name.toLowerCase();
+      return name.includes('oil') || name.includes('sebum') || name.includes('pore') || 
+             name.includes('acne') || name.includes('shine') || name.includes('blackhead');
+    });
+    
+    if (hasOilProblems) oilyIndicators.push('red_oil_problems');
+    
+    // Check ORANGE scores for oil indicators
+    const oilOrangeScores = averageScores.filter(s => {
+      const name = s.name.toLowerCase();
+      return name.includes('oil') || name.includes('pore') || name.includes('acne');
+    });
+    
+    if (oilOrangeScores.length >= 1) oilyIndicators.push('oil_averages');
+    
+    console.log('💧 Oily indicators found:', oilyIndicators);
+    
+    // DETECT OILY SKIN
+    if (oilyIndicators.length >= 2 || 
+        hasOilProblems || 
+        (acneScore < 40) || 
+        (poreScore < 40) ||
+        (oilScore > 70)) {
+      console.log('✅ Detected: OILY skin (oil/pore/acne indicators present)');
+      return 'oily';
+    }
+    
+    // 🎯 SENSITIVE SKIN DETECTION - THIRD PRIORITY
+    const sensitiveIndicators = [];
+    
+    // Check redness - lower scores mean more redness
+    if (rednessScore < 60) sensitiveIndicators.push('has_redness');
+    
+    // Check sensitivity scores
+    if (sensitivityScore < 60) sensitiveIndicators.push('is_sensitive');
+    
+    // Check for RED sensitive problems
+    const hasSensitiveProblems = problemScores.some(s => {
+      const name = s.name.toLowerCase();
+      return name.includes('red') || name.includes('sensit') || name.includes('irritat') || 
+             name.includes('inflam') || name.includes('react');
+    });
+    
+    if (hasSensitiveProblems) sensitiveIndicators.push('red_sensitive_problems');
+    
+    // Check ORANGE scores for sensitivity
+    const sensitiveOrangeScores = averageScores.filter(s => {
+      const name = s.name.toLowerCase();
+      return name.includes('red') || name.includes('sensit');
+    });
+    
+    if (sensitiveOrangeScores.length >= 1) sensitiveIndicators.push('sensitive_averages');
+    
+    console.log('🌸 Sensitive indicators found:', sensitiveIndicators);
+    
+    // DETECT SENSITIVE SKIN
+    if (sensitiveIndicators.length >= 2 || 
+        hasSensitiveProblems || 
+        (rednessScore < 40) || 
+        (sensitivityScore < 40)) {
+      console.log('✅ Detected: SENSITIVE skin (redness/sensitivity indicators present)');
       return 'sensitive';
     }
     
-    // COMBINATION SKIN INDICATORS
-    if (indicators.oiliness > 40 && indicators.oiliness < 70 && 
-        indicators.pores > 30 && indicators.hydration > 30 && indicators.hydration < 70) {
-      console.log('✅ Detected: COMBINATION skin (mixed patterns)');
+    // 🎯 COMBINATION SKIN DETECTION - FOURTH PRIORITY
+    // Must have clear indicators of BOTH oily AND dry characteristics
+    const hasOilyCharacteristics = oilyIndicators.length >= 1 || acneScore < 60 || poreScore < 60;
+    const hasDryCharacteristics = dryIndicators.length >= 1 || hydrationScore < 70;
+    
+    if (hasOilyCharacteristics && hasDryCharacteristics) {
+      console.log('✅ Detected: COMBINATION skin (both oily AND dry characteristics present)');
       return 'combination';
     }
     
-    // DEFAULT TO NORMAL
-    console.log('✅ Detected: NORMAL skin (balanced indicators)');
+    // Check for T-zone specific problems
+    const hasTZoneProblems = scores.some(s => {
+      const name = s.name.toLowerCase();
+      return name.includes('t-zone') || name.includes('t_zone') || 
+             (name.includes('forehead') && name.includes('oil'));
+    });
+    
+    if (hasTZoneProblems) {
+      console.log('✅ Detected: COMBINATION skin (T-zone specific issues)');
+      return 'combination';
+    }
+    
+    // 🎯 NORMAL SKIN DETECTION - LAST PRIORITY
+    // Only if no major skin type issues detected
+    console.log('✅ Detected: NORMAL skin (no significant skin type issues found)');
     return 'normal';
   }
 
-  // 📊 Extract skin indicators from API scores
-  private extractSkinIndicators(scores: OutputScore[]): {
+  // 📊 IMPROVED: More flexible indicator extraction
+  private extractImprovedSkinIndicators(scores: OutputScore[], scoreMap: { [key: string]: number }): {
     oiliness: number;
     hydration: number;
     pores: number;
@@ -153,192 +345,329 @@ export class Api {
     redness: number;
     texture: number;
     irritation: number;
+    sebum: number;
+    dryness: number;
   } {
     
-    const getScore = (keywords: string[]): number => {
+    // Try to find scores by exact name first, then by keywords
+    const getScoreFlexible = (exactNames: string[], keywords: string[]): number => {
+      // Check exact matches first
+      for (const name of exactNames) {
+        if (scoreMap[name] !== undefined) {
+          return scoreMap[name];
+        }
+      }
+      
+      // Then check keyword matches
       for (const score of scores) {
-        const name = score.name.toLowerCase();
+        const scoreName = score.name.toLowerCase();
         for (const keyword of keywords) {
-          if (name.includes(keyword.toLowerCase())) {
+          if (scoreName.includes(keyword.toLowerCase())) {
             return score.value;
           }
         }
       }
-      return 50; // Default neutral score
+      
+      // Return neutral score if not found
+      return 50;
     };
     
     return {
-      oiliness: getScore(['oil', 'sebum', 'shine', 'grease']),
-      hydration: getScore(['hydration', 'moisture', 'dryness', 'water']),
-      pores: getScore(['pore', 'blackhead', 'comedone']),
-      acne: getScore(['acne', 'pimple', 'breakout', 'blemish']),
-      sensitivity: getScore(['sensitive', 'sensitivity', 'reactive']),
-      redness: getScore(['red', 'redness', 'inflammation', 'irritation']),
-      texture: getScore(['texture', 'smooth', 'rough', 'uneven']),
-      irritation: getScore(['irritation', 'inflamed', 'reaction'])
+      oiliness: getScoreFlexible(
+        ['oiliness', 'oil_level', 'sebum_level'],
+        ['oil', 'sebum', 'shine', 'grease']
+      ),
+      hydration: getScoreFlexible(
+        ['hydration', 'moisture', 'water_content'],
+        ['hydrat', 'moisture', 'water']
+      ),
+      pores: getScoreFlexible(
+        ['pores', 'pore_size', 'enlarged_pores'],
+        ['pore', 'blackhead', 'comedone']
+      ),
+      acne: getScoreFlexible(
+        ['acne', 'pimples', 'breakouts'],
+        ['acne', 'pimple', 'breakout', 'blemish']
+      ),
+      sensitivity: getScoreFlexible(
+        ['sensitivity', 'reactive_skin'],
+        ['sensitiv', 'reactive']
+      ),
+      redness: getScoreFlexible(
+        ['redness', 'inflammation', 'erythema'],
+        ['red', 'inflam', 'irritat', 'erythema']
+      ),
+      texture: getScoreFlexible(
+        ['texture', 'smoothness', 'skin_texture'],
+        ['texture', 'smooth', 'rough', 'uneven']
+      ),
+      irritation: getScoreFlexible(
+        ['irritation', 'inflamed'],
+        ['irritat', 'inflam', 'reaction']
+      ),
+      sebum: getScoreFlexible(
+        ['sebum', 'sebum_production'],
+        ['sebum']
+      ),
+      dryness: getScoreFlexible(
+        ['dryness', 'dry_skin', 'dehydration'],
+        ['dry', 'dehydrat', 'flak']
+      )
     };
   }
 
   // 🎯 Calculate confidence based on how clear the skin type indicators are
   private calculateConfidenceFromScores(scores: OutputScore[], detectedType: string): number {
     
-    const indicators = this.extractSkinIndicators(scores);
+    // Check color distribution
+    const problemScores = scores.filter(s => s.color === '#FF6961');
+    const goodScores = scores.filter(s => s.color === '#00FF00');
+    const scoreMap: { [key: string]: number } = {};
+    scores.forEach(score => {
+      scoreMap[score.name.toLowerCase()] = score.value;
+    });
+    
     let confidence = 75; // Base confidence
     
-    // 📈 Increase confidence for clear patterns
+    // Type-specific confidence boosters
     switch (detectedType) {
       case 'oily':
-        if (indicators.oiliness > 70) confidence += 10;
-        if (indicators.pores > 60) confidence += 8;
-        if (indicators.acne > 50) confidence += 7;
+        // Check for strong oily indicators
+        const hasOilProblems = problemScores.some(s => 
+          s.name.toLowerCase().includes('oil') || 
+          s.name.toLowerCase().includes('pore') ||
+          s.name.toLowerCase().includes('acne')
+        );
+        if (hasOilProblems) confidence += 15;
+        if (scoreMap['acne'] && scoreMap['acne'] < 30) confidence += 10;
+        if (scoreMap['pores'] && scoreMap['pores'] < 30) confidence += 10;
         break;
         
       case 'dry':
-        if (indicators.hydration < 30) confidence += 12;
-        if (indicators.oiliness < 25) confidence += 10;
+        // Check for strong dry indicators
+        const hasDryProblems = problemScores.some(s => 
+          s.name.toLowerCase().includes('hydrat') || 
+          s.name.toLowerCase().includes('dry')
+        );
+        if (hasDryProblems) confidence += 15;
+        if (scoreMap['hydration'] && scoreMap['hydration'] < 30) confidence += 15;
         break;
         
       case 'sensitive':
-        if (indicators.sensitivity > 70) confidence += 15;
-        if (indicators.redness > 60) confidence += 10;
+        // Check for strong sensitive indicators
+        const hasSensitiveProblems = problemScores.some(s => 
+          s.name.toLowerCase().includes('red') || 
+          s.name.toLowerCase().includes('sensit')
+        );
+        if (hasSensitiveProblems) confidence += 15;
+        if (scoreMap['redness'] && scoreMap['redness'] < 30) confidence += 15;
         break;
         
       case 'combination':
-        // Combination is harder to detect, so lower base confidence
-        confidence = 70;
-        if (indicators.oiliness > 40 && indicators.oiliness < 70) confidence += 8;
+        // Combination needs both oily and dry indicators
+        const hasOilyAndDry = 
+          problemScores.some(s => s.name.toLowerCase().includes('oil') || s.name.toLowerCase().includes('pore')) &&
+          (scoreMap['hydration'] < 50 || problemScores.some(s => s.name.toLowerCase().includes('dry')));
+        if (hasOilyAndDry) confidence += 10;
         break;
         
       case 'normal':
-        // Normal skin has balanced scores
-        const balance = this.calculateScoreBalance(indicators);
-        confidence += balance;
+        // Normal skin should have mostly good scores
+        if (goodScores.length > scores.length * 0.5) confidence += 10;
+        if (problemScores.length === 0) confidence += 15;
+        // Check that key indicators are balanced
+        if (scoreMap['hydration'] > 70 && scoreMap['redness'] > 70) confidence += 10;
         break;
     }
     
-    // 🔒 Cap confidence at realistic levels
-    return Math.min(Math.max(confidence, 70), 92);
-  }
-
-  // ⚖️ Calculate how balanced the skin indicators are (for normal skin)
-  private calculateScoreBalance(indicators: any): number {
-    const values = Object.values(indicators) as number[];
-    const avg = values.reduce((sum, val) => sum + val, 0) / values.length;
-    const variance = values.reduce((sum, val) => sum + Math.pow(val - avg, 2), 0) / values.length;
-    
-    // Lower variance = more balanced = higher confidence for normal skin
-    if (variance < 200) return 15;
-    if (variance < 400) return 10;
-    if (variance < 600) return 5;
-    return 0;
+    // Cap confidence at realistic levels
+    return Math.min(Math.max(confidence, 65), 92);
   }
 
   // 🔬 Build detailed analysis from API scores  
   private buildAnalysisFromScores(scores: OutputScore[]) {
     
-    const indicators = this.extractSkinIndicators(scores);
+    const scoreMap: { [key: string]: number } = {};
+    scores.forEach(score => {
+      scoreMap[score.name.toLowerCase()] = score.value;
+    });
+    
+    // Get actual scores or defaults
+    const oilScore = scoreMap['oiliness'] || scoreMap['oil'] || scoreMap['sebum'] || 50;
+    const poreScore = scoreMap['pores'] || scoreMap['enlarged_pores'] || 50;
+    const textureScore = scoreMap['texture'] || 50;
+    const sensitivityScore = scoreMap['sensitivity'] || scoreMap['reactive'] || 50;
+    const hydrationScore = scoreMap['hydration'] || scoreMap['moisture'] || 50;
     
     return {
       oiliness: {
-        score: Math.round(indicators.oiliness),
-        zones: this.getOilinessZonesFromScore(indicators.oiliness)
+        score: Math.round(oilScore),
+        zones: this.getOilinessZonesFromScore(oilScore)
       },
       poreSize: {
-        score: Math.round(indicators.pores),
-        description: this.getPoreDescriptionFromScore(indicators.pores)
+        score: Math.round(poreScore),
+        description: this.getPoreDescriptionFromScore(poreScore)
       },
       texture: {
-        score: Math.round(indicators.texture),
-        description: this.getTextureDescriptionFromScore(indicators.texture)
+        score: Math.round(textureScore),
+        description: this.getTextureDescriptionFromScore(textureScore)
       },
       sensitivity: {
-        score: Math.round(indicators.sensitivity),
-        description: this.getSensitivityDescriptionFromScore(indicators.sensitivity)
+        score: Math.round(sensitivityScore),
+        description: this.getSensitivityDescriptionFromScore(sensitivityScore)
       },
       hydration: {
-        score: Math.round(indicators.hydration),
-        description: this.getHydrationDescriptionFromScore(indicators.hydration)
+        score: Math.round(hydrationScore),
+        description: this.getHydrationDescriptionFromScore(hydrationScore)
       }
     };
   }
 
-  // 🎯 Generate specific descriptions based on scores
+  // Helper functions for generating descriptions
   private getOilinessZonesFromScore(score: number): string[] {
-    if (score > 70) return ['T-zone significantly elevated', 'Cheeks showing excess oil', 'Overall shiny appearance'];
-    if (score > 40) return ['T-zone moderately elevated', 'Some oil in central areas', 'Balanced overall'];
-    return ['Minimal oil production', 'Well-controlled throughout', 'No significant shine areas'];
+    if (score > 70) return ['T-zone shows excess oil production', 'Visible shine throughout the day', 'May need blotting papers'];
+    if (score > 40) return ['T-zone has moderate oil', 'Some shine by midday', 'Generally balanced'];
+    return ['Minimal oil production', 'No significant shine', 'May feel tight without moisturizer'];
   }
 
   private getPoreDescriptionFromScore(score: number): string {
-    if (score > 70) return 'Large, clearly visible pores especially in T-zone and nose area';
-    if (score > 40) return 'Medium-sized pores, more noticeable in central face areas';
-    return 'Small, barely visible pores with refined skin texture';
+    // Note: In many scoring systems, lower scores = more visible pores
+    if (score < 30) return 'Large, clearly visible pores especially in T-zone and nose area - needs pore-minimizing care';
+    if (score < 60) return 'Medium-sized pores, somewhat visible in central face areas';
+    return 'Small, refined pores with good skin texture';
   }
 
   private getTextureDescriptionFromScore(score: number): string {
     if (score > 70) return 'Smooth, even texture with excellent skin quality';
-    if (score > 40) return 'Generally good texture with some minor irregularities';
-    return 'Uneven texture with visible roughness and irregularities';
+    if (score > 40) return 'Generally good texture with minor irregularities';
+    return 'Uneven texture that could benefit from exfoliation and resurfacing treatments';
   }
 
   private getSensitivityDescriptionFromScore(score: number): string {
-    if (score > 70) return 'High sensitivity detected - prone to reactions and irritation';
-    if (score > 40) return 'Moderate sensitivity levels - some reactive tendencies';
-    return 'Low sensitivity - skin appears tolerant and resilient';
+    // Lower scores may indicate more sensitivity/redness
+    if (score < 30) return 'High sensitivity detected - skin is reactive and needs gentle care';
+    if (score < 60) return 'Moderate sensitivity - some reactive tendencies, use caution with new products';
+    return 'Low sensitivity - skin appears resilient and tolerant to most products';
   }
 
   private getHydrationDescriptionFromScore(score: number): string {
-    if (score > 70) return 'Excellent hydration levels - skin appears plump and healthy';
-    if (score > 40) return 'Good hydration levels - well-moisturized appearance';
-    return 'Poor hydration levels - skin appears dull and may feel tight';
+    if (score > 80) return 'Excellent hydration - skin appears plump, dewy, and healthy';
+    if (score > 60) return 'Good hydration levels - skin is well-moisturized';
+    if (score > 40) return 'Moderate hydration - could benefit from hydrating products';
+    return 'Poor hydration - skin appears dry, dull, and may feel tight';
   }
 
   // 💡 Generate targeted recommendations for detected skin type
   private generateRecommendationsForDetectedType(skinType: string, scores: OutputScore[]): string[] {
     
-    const indicators = this.extractSkinIndicators(scores);
-    const baseRecs = ['Apply broad-spectrum SPF daily', 'Maintain consistent skincare routine'];
+    const scoreMap: { [key: string]: number } = {};
+    scores.forEach(score => {
+      scoreMap[score.name.toLowerCase()] = score.value;
+    });
+    
+    const problemScores = scores.filter(s => s.color === '#FF6961');
+    const problemNames = problemScores.map(s => s.name.toLowerCase());
+    
+    const baseRecs = ['Apply broad-spectrum SPF 30-50 daily', 'Maintain consistent skincare routine'];
     
     switch (skinType) {
       case 'oily':
-        return [
+        const recommendations = [
           'Use oil-free, non-comedogenic products to prevent clogged pores',
-          indicators.acne > 50 ? 'Consider salicylic acid for acne control' : 'Use niacinamide for oil regulation',
-          'Gentle foaming cleanser twice daily',
-          ...baseRecs
+          'Cleanse twice daily with a gentle foaming cleanser',
+          'Use lightweight, gel-based moisturizers',
         ];
+        
+        // Add specific recommendations based on problems
+        if (scoreMap['acne'] < 40 || problemNames.includes('acne')) {
+          recommendations.push('Consider salicylic acid (BHA) for acne control');
+          recommendations.push('Use benzoyl peroxide spot treatment for active breakouts');
+        }
+        if (scoreMap['pores'] < 40 || problemNames.includes('pore')) {
+          recommendations.push('Use niacinamide serum to minimize pore appearance');
+          recommendations.push('Weekly clay masks to deep clean pores');
+        }
+        
+        return [...recommendations, ...baseRecs];
         
       case 'dry':
-        return [
-          'Focus on hydrating ingredients like hyaluronic acid and ceramides',
-          indicators.hydration < 30 ? 'Use a heavy moisturizer morning and night' : 'Apply moisturizer while skin is damp',
-          'Avoid harsh cleansers that strip natural oils',
-          ...baseRecs
+        const dryRecs = [
+          'Use creamy, hydrating cleansers that don\'t strip natural oils',
+          'Apply heavy moisturizers with ceramides and hyaluronic acid',
+          'Layer hydrating serums under moisturizer',
         ];
-        
+
+        // Add specific recommendations based on severity
+        if (scoreMap['hydration'] < 30) {
+          dryRecs.push('Use overnight sleeping masks for intense hydration');
+          dryRecs.push('Consider adding facial oils (rosehip, argan) to routine');
+        }
+        if (problemNames.includes('flak') || problemNames.includes('texture')) {
+          dryRecs.push('Gentle exfoliation once weekly with lactic acid');
+        }
+
+        return [...dryRecs, ...baseRecs];
+
       case 'sensitive':
-        return [
+        const sensitiveRecs = [
           'Use fragrance-free, hypoallergenic products only',
-          indicators.redness > 60 ? 'Look for anti-inflammatory ingredients like niacinamide' : 'Patch test all new products',
-          'Avoid physical scrubs and strong actives initially',
-          ...baseRecs
+          'Patch test all new products for 48 hours before full use',
+          'Avoid harsh ingredients (alcohol, essential oils, strong acids)',
+          'Use mineral sunscreen instead of chemical sunscreen',
         ];
-        
+
+        // Add specific recommendations based on problems
+        if (scoreMap['redness'] < 40 || problemNames.includes('red')) {
+          sensitiveRecs.push('Use centella asiatica or niacinamide for redness reduction');
+          sensitiveRecs.push('Keep skincare routine minimal (cleanser, moisturizer, SPF)');
+        }
+        if (problemNames.includes('irritat')) {
+          sensitiveRecs.push('Use products with soothing ingredients (aloe, oatmeal)');
+        }
+
+        return [...sensitiveRecs, ...baseRecs];
+
       case 'combination':
-        return [
+        const comboRecs = [
           'Use different products for different areas of your face',
-          'Lightweight moisturizer on T-zone, richer cream on dry areas',
-          'Consider BHA for oily zones and hydrating serums for dry zones',
-          ...baseRecs
+          'Apply lightweight moisturizer to T-zone, richer cream to dry areas',
+          'Use balancing toners to regulate oil production',
         ];
-        
+
+        // Add targeted recommendations
+        const hasOilProblems = problemNames.some(n => n.includes('oil') || n.includes('pore'));
+        const hasDryProblems = scoreMap['hydration'] < 50 || problemNames.some(n => n.includes('dry'));
+
+        if (hasOilProblems) {
+          comboRecs.push('Use BHA on oily T-zone areas only');
+        }
+        if (hasDryProblems) {
+          comboRecs.push('Apply hydrating serums to dry cheek areas');
+        }
+        comboRecs.push('Multi-masking: clay mask on T-zone, hydrating mask on cheeks');
+
+        return [...comboRecs, ...baseRecs];
+
       default: // normal
-        return [
-          'Maintain your current routine with seasonal adjustments',
-          'Add antioxidant serums for extra protection',
+        const normalRecs = [
+          'Maintain current balanced skincare routine',
+          'Focus on prevention and anti-aging ingredients',
           'Use gentle exfoliation 1-2 times per week',
-          ...baseRecs
         ];
+
+        // Add recommendations for any specific concerns
+        if (problemNames.includes('dark_spot') || problemNames.includes('pigment')) {
+          normalRecs.push('Use vitamin C serum for brightening and dark spot reduction');
+          normalRecs.push('Consider niacinamide or kojic acid for pigmentation');
+        }
+        if (problemNames.includes('uneven')) {
+          normalRecs.push('Use AHA exfoliants to improve skin texture and tone');
+        }
+        if (problemNames.includes('wrinkle')) {
+          normalRecs.push('Add retinol/retinoid to evening routine for anti-aging');
+        }
+
+        return [...normalRecs, ...baseRecs];
     }
   }
 
@@ -378,69 +707,114 @@ export class Api {
 
   // Method to share report (EXISTING - NO CHANGES NEEDED)
   async shareReport(email: string, phone: string, sessionId: string, optForPromotions: boolean): Promise<string> {
-    const response = await fetch(`${this.shareApiUrl}?clientkey=${this.clientKey}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        email: email,
-        phone: phone,
-        session_id: sessionId,
-        optForPromotions,
-      }),
-    });
+    console.log('🚀 Starting shareReport process...');
+    console.log('📧 Email:', email);
+    console.log('📱 Phone:', phone);
+    console.log('🔑 Session ID:', sessionId);
+    console.log('🌐 API URL:', this.shareApiUrl);
 
-    const data = await response.json();
-    if (data.success && data.statusCode === 200) {
-      return data.data.message;
-    } else {
-      throw new Error('Failed to share report');
+    // Enhanced validation
+    if (!email || !phone || !sessionId) {
+        const error = 'Missing required fields for sharing report';
+        console.error('❌ Validation Error:', error);
+        throw new Error(error);
     }
-  }
 
-  async sendOtp(sessionId: string | null, phone: string): Promise<string> {
-    const otpApiUrl = `${this.baseUrl}/auth/otp?clientkey=${this.clientKey}`;
-
-    const response = await fetch(otpApiUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        session_id: sessionId,
-        phone: phone,
-      }),
-    });
-
-    const data = await response.json();
-    if (data.success && data.statusCode === 200) {
-      return data.data.message;
-    } else {
-      throw new Error(data.error.message || 'Failed to send OTP');
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+        throw new Error('Invalid email format');
     }
-  }
 
-  async verifyOtp(sessionId: string | null, phone: string, otp: string): Promise<string> {
-    const verifyApiUrl = `${this.baseUrl}/auth/verify?clientkey=${this.clientKey}`;
+    // Clean and validate phone number
+    let cleanPhone = phone.trim();
 
-    const response = await fetch(verifyApiUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        session_id: sessionId,
-        phone: phone,
-        otp: otp,
-      }),
-    });
-
-    const data = await response.json();
-    if (data.success && data.statusCode === 200) {
-      return data.data.message;
-    } else {
-      throw new Error(data.error.message || 'Failed to verify OTP');
+    // Remove any spaces or dashes
+    cleanPhone = cleanPhone.replace(/[\s-]/g, '');
+    // Ensure it starts with +
+    if (!cleanPhone.startsWith('+')) {
+        throw new Error('Phone number must include country code (e.g., +233551234567 for Ghana)');
     }
-  }
-}
+
+    // Validate phone format
+    const phoneRegex = /^\+\d{10,15}$/;
+    if (!phoneRegex.test(cleanPhone)) {
+        throw new Error('Invalid phone number format. Expected: +[country code][number]');
+    }
+
+    const requestBody = {
+        email: email.trim(),
+        phone: cleanPhone,
+        session_id: sessionId,
+        optForPromotions: optForPromotions
+    };
+
+    console.log('📤 Request payload:', JSON.stringify(requestBody, null, 2));
+
+    try {
+        const response = await fetch(`${this.shareApiUrl}?clientkey=${this.clientKey}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'User-Agent': 'SmartSkin-Africa-Web/1.0'
+            },
+            body: JSON.stringify(requestBody),
+        });
+
+        console.log('📥 Response status:', response.status);
+        console.log('📥 Response headers:', Object.fromEntries(response.headers.entries()));
+
+        // Always get response text first
+        const responseText = await response.text();
+        console.log('📥 Raw response:', responseText);
+
+        let data;
+        try {
+            data = JSON.parse(responseText);
+        } catch (parseError) {
+            console.error('❌ Failed to parse response as JSON:', parseError);
+            throw new Error(`Server returned invalid JSON. Status: ${response.status}. Response: ${responseText.substring(0, 200)}`);
+        }
+
+        if (response.ok && data.success && data.statusCode === 200) {
+            console.log('✅ Report shared successfully!');
+            const message = data.data?.message || data.message || 'Report shared successfully';
+            console.log('📝 Success message:', message);
+            return message;
+        } else {
+            // Enhanced error handling
+            console.error('❌ API Error Details:');
+            console.error('   HTTP Status:', response.status, response.statusText);
+            console.error('   Success Flag:', data.success);
+            console.error('   API Status Code:', data.statusCode);
+            console.error('   Error Object:', data.error);
+            console.error('   Full Response:', data);
+
+            const errorMessage = data.error?.message ||
+                               data.message ||
+                               `ShareReport failed: ${response.status} ${response.statusText}`;
+
+            throw new Error(errorMessage);
+        }
+
+    } catch (error) {
+        console.error('❌ ShareReport network/API error:', error);
+
+        // Better error messages for common issues
+        if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
+            throw new Error('Cannot connect to the API server. Please check your internet connection and try again.');
+        }
+
+        if (error instanceof Error) {
+            if (error.message.includes('401')) {
+                throw new Error('API authentication failed. Please check your API key configuration.');
+            }
+
+            if (error.message.includes('404')) {
+                throw new Error('API endpoint not found. The service might be temporarily unavailable.');
+            }
+        }
+            throw error;
+        }
+    }}

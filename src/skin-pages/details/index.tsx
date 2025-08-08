@@ -136,43 +136,72 @@ const Details = () => {
 
   const sendDetails = async () => {
     if (!sessionId || !capturedPic) {
-      setSnackbar({
-        snackbarOpen: true,
-        snackbarMessage: 'Oops! Something went wrong. Please try again later.',
-        snackbarSeverity: 'error',
-      });
-      return;
+        setSnackbar({
+            snackbarOpen: true,
+            snackbarMessage: 'Session error. Please restart the skin analysis.',
+            snackbarSeverity: 'error',
+        });
+        return;
     }
 
     try {
-      setSaving(true);
-      const api = new Api();
-      const { scores, recommendations, fallbackProductImage } = await api.getSkinScoresAndRecommendations(
-        sessionId,
-        capturedPic,
-        userInfo.skin,
-        userInfo.gender,
-        userInfo.age,
-        name,
-      );
-      await api.shareReport(email, finalNumber, sessionId, optForPromotions);
-
-      setOutputScore(scores);
-      setRecommendations(recommendations);
-      setFallbackProductImage(fallbackProductImage);
-
-      setView('Recommendation');
-      setSaving(false);
+        setSaving(true);
+        const api = new Api();
+        
+        console.log('📊 Getting skin analysis...');
+        const { scores, recommendations, fallbackProductImage } = await api.getSkinScoresAndRecommendations(
+            sessionId,
+            capturedPic,
+            userInfo.skin,
+            userInfo.gender,
+            userInfo.age,
+            name,
+        );
+        
+        console.log('✅ Analysis received, now sharing report...');
+        console.log('📱 Phone for sharing:', finalNumber);
+        console.log('📧 Email for sharing:', email);
+        
+        // Try to share the report
+        const shareMessage = await api.shareReport(email, finalNumber, sessionId, optForPromotions);
+        
+        // If we get here, both analysis and sharing were successful
+        setOutputScore(scores);
+        setRecommendations(recommendations);
+        setFallbackProductImage(fallbackProductImage);
+        
+        setSnackbar({
+            snackbarOpen: true,
+            snackbarMessage: `Analysis complete! ${shareMessage}`,
+            snackbarSeverity: 'success',
+        });
+        
+        setView('Recommendation');
+        
     } catch (error) {
-      setSaving(false);
-      console.error('Error occurred while sending details:', error);
-      setSnackbar({
-        snackbarOpen: true,
-        snackbarMessage: 'Oops! Something went wrong. Please try again later.',
-        snackbarSeverity: 'error',
-      });
+        console.error('❌ Error in sendDetails:', error);
+        
+        let errorMessage = 'Something went wrong. Please try again.';
+        
+        if (error instanceof Error) {
+            if (error.message.includes('phone') || error.message.includes('Phone')) {
+                errorMessage = 'Please check your phone number format and try again.';
+            } else if (error.message.includes('email') || error.message.includes('Email')) {
+                errorMessage = 'Please check your email address and try again.';
+            } else if (error.message.includes('API') || error.message.includes('server')) {
+                errorMessage = 'Unable to send the report. Your analysis was completed but the PDF could not be sent.';
+            }
+        }
+        
+        setSnackbar({
+            snackbarOpen: true,
+            snackbarMessage: errorMessage,
+            snackbarSeverity: 'error',
+        });
+    } finally {
+        setSaving(false);
     }
-  };
+};
 
   const verifyPayment = async (reference: string, accessCode: string, key: string) => {
     try {
