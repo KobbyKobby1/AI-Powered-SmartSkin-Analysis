@@ -5,8 +5,26 @@ import Card from '@mui/material/Card';
 import PrecisionAssessment from '../../components/PreciseSkin';
 import TryNow from '../../components/TryNow';
 import HowItWorks from '../../components/HowItWorks';
-import { Box } from '@mui/material';
+import { Box, Button } from '@mui/material';
+import { useState, useEffect } from 'react';
+import { useView } from '../../context';
+
 const HomePage = () => {
+  const [showTestButton, setShowTestButton] = useState(false);
+  const { setView } = useView();
+
+  useEffect(() => {
+    const handleKeyPress = (e: KeyboardEvent) => {
+      // Press Ctrl+Shift+T to show test button
+      if (e.ctrlKey && e.shiftKey && e.key === 'T') {
+        setShowTestButton(true);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyPress);
+    return () => window.removeEventListener('keydown', handleKeyPress);
+  }, []);
+
   return (
     <Box
       sx={{
@@ -46,6 +64,37 @@ const HomePage = () => {
       <HowItWorks />
       <PrecisionAssessment />
       <Faq />
+
+      {/* Developer Test Button (hidden by default) */}
+      {showTestButton && (
+        <Box
+          sx={{
+            position: 'fixed',
+            bottom: '20px',
+            right: '20px',
+            zIndex: 1000
+          }}
+        >
+          <Button
+            onClick={() => setView('TestSystem')}
+            sx={{
+              background: 'linear-gradient(45deg, #602DEE, #8B5CF6)',
+              color: 'white',
+              fontWeight: 'bold',
+              padding: '12px 24px',
+              borderRadius: '25px',
+              boxShadow: '0 4px 15px rgba(96, 45, 238, 0.3)',
+              '&:hover': {
+                background: 'linear-gradient(45deg, #5A27D6, #7C4DFF)',
+                transform: 'translateY(-2px)',
+                boxShadow: '0 6px 20px rgba(96, 45, 238, 0.4)'
+              }
+            }}
+          >
+            🧪 Test Enhanced System
+          </Button>
+        </Box>
+      )}
     </Box>
   );
 };

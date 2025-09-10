@@ -17,6 +17,7 @@ import { OutputScore, Product, useView } from '../../context';
 import { useEffect, useState } from 'react';
 import { ConcernDescriptions } from './concerns-description';
 import CloseIcon from '@mui/icons-material/Close';
+import { ReactPDFReport, HTMLToPDFReport } from '../../components/PDFReport';
 
 // interface Product {
 //   name: string;
@@ -42,7 +43,7 @@ const colorPriority = [
 ];
 
 const Recommendation = () => {
-  const { outputScore, recommendations, fallbackProductImage } = useView();
+  const { outputScore, recommendations, fallbackProductImage, userInfo, capturedPic } = useView();
   const [skinOutput, setSkinOutput] = useState<OutputScore[]>([]);
   const [skinHealth, setSkinHealth] = useState<number>(0);
   const [selectedConcernTitle, setSelectedConcernTitle] = useState<string>('');
@@ -353,9 +354,27 @@ const Recommendation = () => {
               gap: '10px',
             }}
           >
-            <Typography sx={{ ...styles.subHeading, width: '100%', paddingBottom: '30px', fontWeight: 600 }}>
+            <Typography sx={{ ...styles.subHeading, width: '100%', paddingBottom: '20px', fontWeight: 600 }}>
               Your Skin Health Score - {skinHealth}%
             </Typography>
+            
+            {/* PDF Download Buttons */}
+            <Box sx={{ display: 'flex', gap: 2, mb: 2, flexWrap: 'wrap' }}>
+              <ReactPDFReport
+                userPhoto={capturedPic ? URL.createObjectURL(capturedPic) : undefined}
+                skinScore={skinHealth}
+                outputScore={skinOutput}
+                recommendations={recommendations}
+                userName={userInfo.name}
+              />
+              <HTMLToPDFReport
+                userPhoto={capturedPic ? URL.createObjectURL(capturedPic) : undefined}
+                skinScore={skinHealth}
+                outputScore={skinOutput}
+                recommendations={recommendations}
+                userName={userInfo.name}
+              />
+            </Box>
             <Typography sx={{ ...styles.subHeading, width: '100%', paddingBottom: '0' }}>
               {selectedConcernTitle}
             </Typography>
@@ -487,12 +506,36 @@ const Recommendation = () => {
                   display: { md: 'none' },
                   ...styles.subHeading,
                   width: '100%',
-                  paddingBottom: '30px',
+                  paddingBottom: '20px',
                   fontWeight: 700,
                 }}
               >
                 Your Skin Health Score - {skinHealth}%
               </Typography>
+              
+              {/* PDF Download Buttons for Mobile */}
+              <Box sx={{ 
+                display: { xs: 'flex', md: 'none' }, 
+                gap: 1, 
+                mb: 2, 
+                flexDirection: 'column',
+                alignItems: 'center' 
+              }}>
+                <ReactPDFReport
+                  userPhoto={capturedPic ? URL.createObjectURL(capturedPic) : undefined}
+                  skinScore={skinHealth}
+                  outputScore={skinOutput}
+                  recommendations={recommendations}
+                  userName={userInfo.name}
+                />
+                <HTMLToPDFReport
+                  userPhoto={capturedPic ? URL.createObjectURL(capturedPic) : undefined}
+                  skinScore={skinHealth}
+                  outputScore={skinOutput}
+                  recommendations={recommendations}
+                  userName={userInfo.name}
+                />
+              </Box>
 
               <Box
                 sx={{
