@@ -26,7 +26,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
         <script src="https://makeup.sdk.orbo.ai/C8pgbgE8v0/1.0.0/smart-capture/orbo-setu-smart-capture.js"></script>
       </head>
-      <body style={{ margin: 0, padding: 0 }}>
+      <body style={{ margin: 0, padding: 0 }} suppressHydrationWarning={true}>
         <Navbar />
         <main style={{ marginTop: 90, marginBottom: 60 }}>
           <Container maxWidth={false} style={{ padding: 0 }}>

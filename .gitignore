@@ -27,3 +27,7 @@ package-lock.json
 build
 .next
 *.zip
+# Build directories added by Claude
+.next/
+build/
+dist/
