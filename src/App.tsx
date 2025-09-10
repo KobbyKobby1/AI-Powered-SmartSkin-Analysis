@@ -5,6 +5,7 @@ import Questionnaire from './skin-pages/questionnaire';
 import PicCapture from './skin-pages/pic-capture';
 import Recommendation from './skin-pages/recommendation';
 import Details from './skin-pages/details';
+import { TestEnhancedSystem } from './components/TestEnhancedSystem';
 import { useView } from './context';
 import { useEffect, useState } from 'react';
 import { useSnackbar } from './components/Snackbar/useSnackbar';
@@ -223,6 +224,7 @@ const App = () => {
         {view === 'PicCapture' && <PicCapture />}
         {(view === 'Details' || view === 'OTP') && <Details />}
         {view === 'Recommendation' && <Recommendation />}
+        {view === 'TestSystem' && <TestEnhancedSystem />}
       </Box>
 
       <CustomSnackbar

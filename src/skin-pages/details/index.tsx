@@ -10,14 +10,13 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useView } from '../../context';
 import { logo, model } from '../../assets';
 import { Api } from '../../api';
 import LoadingButton from '@mui/lab/LoadingButton';
 import parsePhoneNumberFromString, { CountryCode, getCountries, getCountryCallingCode } from 'libphonenumber-js';
-import PaystackPop from '@paystack/inline-js';
-import { PaymentApi } from '../../payment-api';
+import { PaymentIntegrationService } from '../../services/payment-integration';
 
 interface Country {
   code: string;
@@ -50,8 +49,6 @@ const Details = () => {
   const [saving, setSaving] = useState<boolean>(false);
   const [countries, setCountries] = useState<Country[]>([]);
   const [finalNumber, setFinalNumber] = useState<string>('');
-  const [verifying, setVerifying] = useState<boolean>(false);
-  const accessCodeRef = useRef<string>('');
   // const [otp, setOtp] = useState<string[]>(Array(4).fill(''));
   // const [timer, setTimer] = useState<number>(90);
 
@@ -203,58 +200,45 @@ const Details = () => {
     }
 };
 
-  const verifyPayment = async (reference: string, accessCode: string, key: string) => {
-    try {
-      const paymentApi = new PaymentApi();
-      setVerifying(true);
-      await paymentApi.verifyPayment(reference, accessCode, key);
-      setVerifying(false);
-      sendDetails();
-    } catch (error) {
-      setVerifying(false);
-      setSnackbar({
-        snackbarOpen: true,
-        snackbarMessage: 'Oops! Error verifying payment. Please try again.',
-        snackbarSeverity: 'error',
-      });
-    }
-  };
-
+  // NEW: Direct Paystack Payment Integration
   const initPayment = async () => {
     try {
-      const paymentApi = new PaymentApi();
-      const { key, price } = await paymentApi.getPaymentData();
-      const popup = new PaystackPop();
-      popup.newTransaction({
-        email,
-        amount: price,
-        firstName: name,
-        key,
-        phone: finalNumber,
-        onSuccess: (transaction) => {
-          verifyPayment(transaction.reference, accessCodeRef.current, key);
-        },
-        onLoad: async (response) => {
-          accessCodeRef.current = response.accessCode;
-          await paymentApi.initiatePayment(response.accessCode, response.customer);
-        },
-        onCancel: () => {
-          setSnackbar({
-            snackbarOpen: true,
-            snackbarMessage: 'Oops! Your payment was not completed.',
-            snackbarSeverity: 'error',
-          });
-        },
-        onError: (error) => {
-          setSnackbar({
-            snackbarOpen: true,
-            snackbarMessage: 'Oops! Something went wrong with payment. Please try again later.',
-            snackbarSeverity: 'error',
-          });
-          console.log('Error: ', error.message);
-        },
-      });
+      console.log('🚀 Initiating new Paystack payment...');
+      setSaving(true);
+      
+      const paymentIntegration = new PaymentIntegrationService();
+      
+      // Debug: Check if we have analysis data
+      console.log('🔍 Debug - sessionId from context:', sessionId);
+      
+      // Use sessionId from context, or generate one for testing
+      const actualSessionId = sessionId || 'test_session_' + Date.now();
+      console.log('🔍 Debug - Using sessionId:', actualSessionId);
+      
+      // Check if analysis data exists for this session
+      const existingData = localStorage.getItem(`analysis_${actualSessionId}`);
+      console.log('🔍 Debug - Existing analysis data:', existingData ? 'Found' : 'Not found');
+      
+      // Prepare payment request
+      const paymentRequest = {
+        sessionId: actualSessionId,
+        userInfo: {
+          name: name.trim(),
+          email: email.trim(),
+          phone: finalNumber
+        }
+      };
+      
+      console.log('👤 Payment request prepared with sessionId:', actualSessionId);
+      
+      // This will open Paystack popup and handle everything automatically
+      await paymentIntegration.initiatePaystackPayment(paymentRequest);
+      
+      setSaving(false);
+      
     } catch (error) {
+      console.error('❌ Payment initiation failed:', error);
+      setSaving(false);
       setSnackbar({
         snackbarOpen: true,
         snackbarMessage: 'Oops! Something went wrong with payment. Please try again later.',
@@ -329,11 +313,11 @@ const Details = () => {
           zIndex: (theme) => theme.zIndex.modal + 1,
           position: 'absolute',
         }}
-        open={verifying}
+        open={saving}
       >
         <CircularProgress color="inherit" />
         <Typography variant="h6" sx={{ ml: 2 }}>
-          Verifying...
+          Processing Payment...
         </Typography>
       </Backdrop>
       {view === 'Details' && (

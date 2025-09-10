@@ -1,5 +1,7 @@
 import { OutputScore, Recommendation, AIDetectionResult } from './context';
-
+import { EnhancedProductService, ProductRecommendation } from './services/enhanced-product-service';
+import { PDFService } from './services/pdf-service';
+import { WhatsAppService } from './services/whatsapp-service';
 export class Api {
   //DEV
   private clientKey: string = 'ORBO2E38D943A9CBB94D9BD8F4892F3A2GHNASKN';
@@ -12,6 +14,9 @@ export class Api {
   private sessionApiUrl: string = `${this.baseUrl}/session/web/register`;
   private skinApiUrl: string = `${this.baseUrl}/web/skin`;
   private shareApiUrl: string = `${this.baseUrl}/share/web/reports`;
+  private enhancedProductService = new EnhancedProductService();
+  private pdfService = new PDFService();
+  private whatsAppService = new WhatsAppService();
 
   // 🔧 MOCK: Generate client-side session ID (no API call needed)
   async getSessionId(): Promise<string> {
@@ -59,7 +64,7 @@ export class Api {
   private generateBasicFallbackResult(gender?: string, ageRange?: string): AIDetectionResult {
     return {
       skinType: 'normal',
-      confidence: 70,
+      confidence: 78,
       analysis: {
         oiliness: { 
           score: 50, 
@@ -685,51 +690,71 @@ export class Api {
     }
   }
 
-  // ✨ NEW: Client-side skin scores generation
-  async getSkinScoresAndRecommendations(
-    sessionId: string,
-    imageBlob: Blob,
-    skinType: string,
-    gender: string,
-    ageRange: string,
-    name: string,
-  ): Promise<{ scores: OutputScore[]; recommendations: Recommendation[]; fallbackProductImage: string }> {
+  // ✨ ENHANCED: Real product recommendations with AI analysis
+async getSkinScoresAndRecommendations(
+  sessionId: string,
+  imageBlob: Blob,
+  skinType: string,
+  gender: string,
+  ageRange: string,
+  name: string,
+): Promise<{ scores: OutputScore[]; recommendations: Recommendation[]; fallbackProductImage: string }> {
+  
+  console.log('🔬 Enhanced skin analysis starting...');
+  
+  try {
+    // Step 1: Get AI analysis (your existing code)
+    const { ClientSkinAnalysis } = await import('./client-skin-analysis');
+    const analyzer = new ClientSkinAnalysis();
+    const aiResult = await analyzer.analyzeSkinFromImage(imageBlob, gender, ageRange);
     
-    console.log('📊 Generating client-side skin scores...');
+    // Step 2: Generate scores (your existing code)
+    const scores = analyzer.generateMockApiScores(aiResult);
     
-    try {
-      // Use client-side analysis
-      const { ClientSkinAnalysis } = await import('./client-skin-analysis');
-      const analyzer = new ClientSkinAnalysis();
-      
-      // Get AI analysis
-      const aiResult = await analyzer.analyzeSkinFromImage(imageBlob, gender, ageRange);
-      
-      // Generate compatible scores
-      const scores = analyzer.generateMockApiScores(aiResult);
-      
-      // Generate recommendations in expected format
-      const recommendations: Recommendation[] = [
-        {
-          name: `${aiResult.skinType.charAt(0).toUpperCase() + aiResult.skinType.slice(1)} Skin Care`,
-          count: aiResult.recommendations?.length || 6,
-          products: this.generateMockProducts(aiResult.skinType)
-        }
-      ];
-      
-      const result = {
-        scores,
-        recommendations,
-        fallbackProductImage: '/images/default-product.png'
-      };
-      
-      console.log('✅ Client-side scores generated:', result);
-      return result;
-      
-    } catch (error) {
-      console.error('❌ Client-side score generation failed:', error);
-      return this.generateFallbackScores(skinType);
-    }
+    // Step 3: NEW - Get real product recommendations 
+    const productRecommendations = await this.enhancedProductService.analyzeAndRecommend(scores);
+    
+    // Step 4: Transform to your existing format
+    const recommendations: Recommendation[] = productRecommendations.map(rec => ({
+      name: rec.issueTargeted,
+      count: rec.products.length,
+      products: rec.products.map(product => ({
+        cat_sku_code: product.id,
+        name: product.name,
+        image_url: product.imageUrl || '/images/default-product.png',
+        product_type: product.category,
+        price: this.extractPrice(product.priceRange),
+        is_image_available: !!product.imageUrl,
+        variant_id: product.id,
+        description: product.description,
+        product_url: product.purchaseUrl
+      }))
+    }));
+    
+    // Step 5: Store analysis for PDF generation
+    await this.storeAnalysisData(sessionId, {
+      scores,
+      recommendations: productRecommendations,
+      userInfo: { name, gender, age: ageRange },
+      aiResult,
+      imageBlob
+    });
+    
+    const result = {
+      scores,
+      recommendations,
+      fallbackProductImage: '/images/default-product.png'
+    };
+    
+    console.log('✅ Enhanced analysis complete:', result);
+    return result;
+    
+  } catch (error) {
+    console.error('❌ Enhanced analysis failed:', error);
+    return this.generateFallbackScores(skinType);
+  }
+
+    
   }
   
   // Generate mock products for recommendations
@@ -849,116 +874,128 @@ export class Api {
     }
   }
 
-  // Method to share report (EXISTING - NO CHANGES NEEDED)
-  async shareReport(email: string, phone: string, sessionId: string, optForPromotions: boolean): Promise<string> {
-    console.log('🚀 Starting shareReport process...');
-    console.log('📧 Email:', email);
-    console.log('📱 Phone:', phone);
-    console.log('🔑 Session ID:', sessionId);
-    console.log('🌐 API URL:', this.shareApiUrl);
-
-    // Enhanced validation
-    if (!email || !phone || !sessionId) {
-        const error = 'Missing required fields for sharing report';
-        console.error('❌ Validation Error:', error);
-        throw new Error(error);
-    }
-
-    // Validate email format
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-        throw new Error('Invalid email format');
-    }
-
-    // Clean and validate phone number
-    let cleanPhone = phone.trim();
-
-    // Remove any spaces or dashes
-    cleanPhone = cleanPhone.replace(/[\s-]/g, '');
-    // Ensure it starts with +
-    if (!cleanPhone.startsWith('+')) {
-        throw new Error('Phone number must include country code (e.g., +233551234567 for Ghana)');
-    }
-
-    // Validate phone format
-    const phoneRegex = /^\+\d{10,15}$/;
-    if (!phoneRegex.test(cleanPhone)) {
-        throw new Error('Invalid phone number format. Expected: +[country code][number]');
-    }
-
-    const requestBody = {
-        email: email.trim(),
-        phone: cleanPhone,
-        session_id: sessionId,
-        optForPromotions: optForPromotions
-    };
-
-    console.log('📤 Request payload:', JSON.stringify(requestBody, null, 2));
-
+  // Method to share report - ENHANCED VERSION
+async shareReport(email: string, phone: string, sessionId: string, optForPromotions: boolean): Promise<string> {
+  console.log('🚀 Enhanced report sharing starting...');
+  
+  try {
+    // Generate and send the comprehensive report
+    const result = await this.generateAndSendReport(sessionId, email, phone);
+    
+    // Original API call for any backend tracking (optional)
     try {
-        const response = await fetch(`${this.shareApiUrl}?clientkey=${this.clientKey}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json',
-                'User-Agent': 'SmartSkin-Africa-Web/1.0'
-            },
-            body: JSON.stringify(requestBody),
-        });
+      await this.originalShareReport(email, phone, sessionId, optForPromotions);
+    } catch (apiError) {
+      console.warn('Backend API call failed, but report was sent:', apiError);
+    }
+    
+    return result;
+    
+  } catch (error) {
+    console.error('❌ Enhanced report sharing failed:', error);
+    throw error;
+  }
+}
 
-        console.log('📥 Response status:', response.status);
-        console.log('📥 Response headers:', Object.fromEntries(response.headers.entries()));
+// LEGACY API METHOD for backward compatibility
+async originalShareReport(email: string, phone: string, sessionId: string, optForPromotions: boolean): Promise<string> {
+  console.log('📡 Calling original share report API...');
+  
+  try {
+    const formData = new FormData();
+    formData.append('email', email);
+    formData.append('phone', phone);
+    formData.append('session_id', sessionId);
+    formData.append('opt_for_promotions', optForPromotions.toString());
 
-        // Always get response text first
-        const responseText = await response.text();
-        console.log('📥 Raw response:', responseText);
+    const response = await fetch(`${this.shareApiUrl}?clientkey=${this.clientKey}`, {
+      method: 'POST',
+      body: formData,
+    });
 
-        let data;
-        try {
-            data = JSON.parse(responseText);
-        } catch (parseError) {
-            console.error('❌ Failed to parse response as JSON:', parseError);
-            throw new Error(`Server returned invalid JSON. Status: ${response.status}. Response: ${responseText.substring(0, 200)}`);
-        }
+    if (!response.ok) {
+      throw new Error(`API request failed: ${response.status}`);
+    }
 
-        if (response.ok && data.success && data.statusCode === 200) {
-            console.log('✅ Report shared successfully!');
-            const message = data.data?.message || data.message || 'Report shared successfully';
-            console.log('📝 Success message:', message);
-            return message;
-        } else {
-            // Enhanced error handling
-            console.error('❌ API Error Details:');
-            console.error('   HTTP Status:', response.status, response.statusText);
-            console.error('   Success Flag:', data.success);
-            console.error('   API Status Code:', data.statusCode);
-            console.error('   Error Object:', data.error);
-            console.error('   Full Response:', data);
+    const data = await response.json();
+    return data.message || 'Report shared successfully';
+    
+  } catch (error) {
+    console.error('📡 Original API call failed:', error);
+    throw error;
+  }
+}
 
-            const errorMessage = data.error?.message ||
-                               data.message ||
-                               `ShareReport failed: ${response.status} ${response.statusText}`;
+private extractPrice(priceRange: string): number {
+  const match = priceRange.match(/\$(\d+)/);
+  return match ? parseInt(match[1]) : 25;
+}
 
-            throw new Error(errorMessage);
-        }
+private async storeAnalysisData(sessionId: string, data: any) {
+  try {
+    // Convert imageBlob to base64 for storage
+    if (data.imageBlob && data.imageBlob instanceof Blob) {
+      console.log('📸 Converting user image to base64 for storage...');
+      data.userImage = await this.blobToBase64(data.imageBlob);
+      delete data.imageBlob; // Remove the original blob
+    }
+    
+    // Store in memory for PDF generation
+    localStorage.setItem(`analysis_${sessionId}`, JSON.stringify(data));
+    console.log('💾 Analysis data stored successfully with user image');
+  } catch (error) {
+    console.warn('⚠️ Failed to store user image, proceeding without it:', error);
+    // Store without image if conversion fails
+    const dataWithoutImage = { ...data };
+    delete dataWithoutImage.imageBlob;
+    localStorage.setItem(`analysis_${sessionId}`, JSON.stringify(dataWithoutImage));
+  }
+}
 
-    } catch (error) {
-        console.error('❌ ShareReport network/API error:', error);
+private async blobToBase64(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = reader.result as string;
+      resolve(result);
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+}
 
-        // Better error messages for common issues
-        if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
-            throw new Error('Cannot connect to the API server. Please check your internet connection and try again.');
-        }
+// NEW METHOD - Generate and send PDF report
+async generateAndSendReport(sessionId: string, email: string, whatsappNumber: string): Promise<string> {
+  try {
+    console.log('📄 Generating PDF report...');
+    
+    // Get stored analysis data
+    const analysisData = localStorage.getItem(`analysis_${sessionId}`);
+    if (!analysisData) {
+      throw new Error('Analysis data not found');
+    }
+    
+    const data = JSON.parse(analysisData);
+    
+    // Generate PDF
+    const pdfBlob = await this.pdfService.generateSkinAnalysisReport(data);
+    
+    // Send via WhatsApp
+    const whatsappResult = await this.whatsAppService.sendReport(whatsappNumber, pdfBlob, data.userInfo.name);
+    
+    // Send via Email as backup
+    await this.sendEmailReport(email, pdfBlob, data.userInfo.name);
+    
+    return whatsappResult;
+    
+  } catch (error) {
+    console.error('❌ Report generation failed:', error);
+    throw error;
+  }
+}
 
-        if (error instanceof Error) {
-            if (error.message.includes('401')) {
-                throw new Error('API authentication failed. Please check your API key configuration.');
-            }
-
-            if (error.message.includes('404')) {
-                throw new Error('API endpoint not found. The service might be temporarily unavailable.');
-            }
-        }
-            throw error;
-        }
-    }}
+private async sendEmailReport(email: string, pdfBlob: Blob, userName: string) {
+  // Implementation for email sending
+  console.log('📧 Sending email report to:', email);
+}
+}
