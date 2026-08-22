@@ -1,7 +1,8 @@
+import { requiredEnv } from './env';
+
 export class PaymentApi {
-  private apiKey: string = 'c073ab50-bded-4446-b71e-27637df054bd';
-  // private baseUrl: string = 'http://localhost:5890/payment';
-  private baseUrl: string = 'https://payment.smartskinafrica.com/payment';
+  private apiKey: string = requiredEnv('NEXT_PUBLIC_PAYMENT_API_KEY', process.env.NEXT_PUBLIC_PAYMENT_API_KEY);
+  private baseUrl: string = requiredEnv('NEXT_PUBLIC_PAYMENT_BASE_URL', process.env.NEXT_PUBLIC_PAYMENT_BASE_URL);
   private headers = { 'Content-Type': 'application/json', 'x-api-key': this.apiKey };
 
   // Method to get payment meta data
@@ -60,7 +61,7 @@ export class PaymentApi {
 
   // Method to verify payment
   async sendContactForm(fullName: string, email: string, phone: string, message: string): Promise<string> {
-    const response = await fetch(`https://payment.smartskinafrica.com/contact`, {
+    const response = await fetch(`${this.baseUrl.replace(/\/payment$/, '')}/contact`, {
       method: 'POST',
       body: JSON.stringify({ fullName, email, phone, message }),
       headers: this.headers,
