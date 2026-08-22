@@ -199,8 +199,10 @@ const EnhancedQuestionnaire = () => {
 
   useEffect(() => {
     if (sessionId) return;
-    new Api()
-      .getSessionId()
+    // Constructing Api() can throw synchronously on missing env config, so build it
+    // inside the chain to keep that failure on the .catch() path below.
+    Promise.resolve()
+      .then(() => new Api().getSessionId())
       .then((sessionId) => {
         setSessionId(sessionId);
       })

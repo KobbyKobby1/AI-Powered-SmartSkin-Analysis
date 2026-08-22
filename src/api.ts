@@ -1,15 +1,10 @@
 import { OutputScore, Recommendation, AIDetectionResult } from './context';
+import { requiredEnv } from './env';
 
 export class Api {
-  //DEV
-  private clientKey: string = 'ORBO2E38D943A9CBB94D9BD8F4892F3A2GHNASKN';
-  private baseUrl: string = 'https://dev.api.ghanaskinanalysis.orbo.tech/api';
+  private clientKey: string = requiredEnv('NEXT_PUBLIC_ORBO_CLIENT_KEY', process.env.NEXT_PUBLIC_ORBO_CLIENT_KEY);
+  private baseUrl: string = requiredEnv('NEXT_PUBLIC_ORBO_BASE_URL', process.env.NEXT_PUBLIC_ORBO_BASE_URL);
 
-  //PROD
-  //private clientKey: string = 'ORBOC39FGG344A13F1E3835618249532552GC';
-  //private baseUrl: string = 'https://api.ghanaskinanalysis.orbo.tech/api';
-
-  private sessionApiUrl: string = `${this.baseUrl}/session/web/register`;
   private skinApiUrl: string = `${this.baseUrl}/web/skin`;
   private shareApiUrl: string = `${this.baseUrl}/share/web/reports`;
 
@@ -194,7 +189,7 @@ export class Api {
     
     // 🎯 DRY SKIN DETECTION - FIRST PRIORITY
     // Check multiple dry skin indicators with more lenient thresholds
-    const dryIndicators = [];
+    const dryIndicators: string[] = [];
     
     // Check hydration - even moderate levels can indicate dryness
     if (hydrationScore < 60) dryIndicators.push('low_hydration');
@@ -244,7 +239,7 @@ export class Api {
     }
     
     // 🎯 OILY SKIN DETECTION - SECOND PRIORITY
-    const oilyIndicators = [];
+    const oilyIndicators: string[] = [];
     
     // Check oil levels
     if (oilScore > 60) oilyIndicators.push('high_oil');
@@ -285,7 +280,7 @@ export class Api {
     }
     
     // 🎯 SENSITIVE SKIN DETECTION - THIRD PRIORITY
-    const sensitiveIndicators = [];
+    const sensitiveIndicators: string[] = [];
     
     // Check redness - lower scores mean more redness
     if (rednessScore < 60) sensitiveIndicators.push('has_redness');

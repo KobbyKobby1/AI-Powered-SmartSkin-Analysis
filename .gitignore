@@ -24,10 +24,15 @@ node_modules
 *.sw?
 
 package-lock.json
-build
-.next
 *.zip
-# Build directories added by Claude
+
+# Build output
 .next/
 build/
 dist/
+*.tsbuildinfo
+
+# Environment variables — .env.example is the committed template
+.env
+.env.*
+!.env.example
